@@ -1,0 +1,27 @@
+{
+  "name": "team-debit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WP2022-Group-6/team-debit.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WP2022-Group-6/team-debit/issues"
+  },
+  "homepage": "https://github.com/WP2022-Group-6/team-debit#readme",
+  "devDependencies": {
+    "@parcel/transformer-pug": "2.5.0",
+    "@parcel/transformer-sass": "2.5.0"
+  },
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "parcel": "^2.5.0"
+  }
+}
