@@ -2,7 +2,8 @@
 database/
 
 # VSCode
-.vscode/
+**/.vscode/*
+!**/.vscode/extensions.json
 
 # Parcel
 .cache/
