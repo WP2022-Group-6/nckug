@@ -12,5 +12,8 @@ dist/
 # Dependency directories
 node_modules/
 
+# Python
+**/__pycache__/
+
 # Yarn
 yarn.lock
