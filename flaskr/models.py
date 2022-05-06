@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
@@ -73,6 +76,15 @@ class user(db.Model, UserMixin):
 
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
+
+
+    @classmethod
+    def create(cls, name, password, email) -> user:
+        if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
+            raise ValueError('This email already exists in the database.')
+        user = cls(name, password, email)
+        DatabaseManager.create(user)
+        return user
 
 
 class group_of_users(db.Model, UserMixin):
