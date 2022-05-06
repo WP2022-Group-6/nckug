@@ -33,21 +33,23 @@ class DatabaseManager():
         return cls.update()
 
 
-class user(db.Model, UserMixin):
+class User(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
     _name = db.Column(db.String, nullable=False, unique=False)
     _password_hash = db.Column(db.String, nullable=False, unique=False)
     _email = db.Column(db.String, nullable=False, unique=True)
+    _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, name, password, email) -> None:
+    def __init__(self, name, password, email, picture) -> None:
         self._name = name
         self._password_hash = generate_password_hash(password)
         self._email = email
+        self._picture = picture
 
     def __repr__(self) -> str:
-        return '<user {}>'.format(self._name, self._password_hash, self._email)
+        return '<User {} {}>'.format(self._name, self._email)
 
     @property
     def name(self) -> str:
@@ -74,20 +76,28 @@ class user(db.Model, UserMixin):
         self._email = value
         DatabaseManager.update()
 
+    @property
+    def picture(self) -> str:
+        return self._picture
+
+    @picture.setter
+    def picture(self, value) -> None:
+        self._picture = value
+        DatabaseManager.update()
+
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
-
     @classmethod
-    def create(cls, name, password, email) -> user:
+    def create(cls, name, password, email, picture=str(nullable=True)) -> User:
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the database.')
-        user = cls(name, password, email)
-        DatabaseManager.create(user)
-        return user
+        User = cls(name, password, email, picture)
+        DatabaseManager.create(User)
+        return User
 
 
-class group_of_users(db.Model, UserMixin):
+class Group_Of_Users(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
@@ -109,7 +119,7 @@ class group_of_users(db.Model, UserMixin):
         self._already_remittance = already_remittance
 
     def __repr__(self) -> str:
-        return '<group_of_users {}>'.format(self._user_id, self._group_id, self._user_name, self._personal_balance, self._remit, self._account, self._already)
+        return '<Group_Of_Users {} {}>'.format(self._user_id, self._group_id)
 
     @property
     def user_id(self) -> int:
@@ -177,8 +187,15 @@ class group_of_users(db.Model, UserMixin):
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
+    @classmethod
+    def create(cls, user_id, group_id, user_name, personal_balance, remit, account, already_remittance) -> Group_Of_Users:
+        Group_Of_Users = cls(user_id, group_id, user_name,
+                             personal_balance, remit, account, already_remittance)
+        DatabaseManager.create(Group_Of_Users)
+        return Group_Of_Users
 
-class users_without_verify(db.Model, UserMixin):
+
+class Users_Without_Verify(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _email = db.Column(db.String, nullable=False, unique=True)
@@ -191,7 +208,7 @@ class users_without_verify(db.Model, UserMixin):
         self._create_time = create_time
 
     def __repr__(self) -> str:
-        return '<users_without_verify {}>'.format(self._email, self._verification, self._create_time)
+        return '<Users_Without_Verify {}>'.format(self._email)
 
     @property
     def email(self) -> str:
@@ -212,7 +229,7 @@ class users_without_verify(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def create_time(self) -> datetime.datetime():
+    def create_time(self) -> datetime:
         return self._create_time
 
     @create_time.setter
@@ -223,30 +240,38 @@ class users_without_verify(db.Model, UserMixin):
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
+    @classmethod
+    def create(cls, email, verification, create_time) -> Users_Without_Verify:
+        if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
+            raise ValueError('This email already exists in the database.')
+        Users_Without_Verify = cls(email, verification, create_time)
+        DatabaseManager.create(Users_Without_Verify)
+        return Users_Without_Verify
 
-class group(db.Model, UserMixin):
+
+class Group(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
     _verification = db.Column(db.String, nullable=False, unique=False)
     _name = db.Column(db.String, nullable=False, unique=False)
     _kind = db.Column(db.String, nullable=False, unique=False)
-    _picture = db.Column(db.Text, nullable=True, unique=False)
+    _need = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
-    _need = db.Column(db.Integer, nullable=False, unique=False)
+    _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, verification, name, kind, picture, owner_id, currency, need) -> None:
+    def __init__(self, verification, name, kind, need, owner_id, currency, picture) -> None:
         self._verification = verification
         self._name = name
         self._kind = kind
-        self._picture = picture
+        self._need = need
         self._owner_id = owner_id
         self._currency = currency
-        self._need = need
+        self._picture = picture
 
     def __repr__(self) -> str:
-        return '<group {}>'.format(self._verification, self._name, self._kind, self._picture, self._owner_id, self._currency, self._need)
+        return '<Group {}>'.format(self._name)
 
     @property
     def verification(self) -> str:
@@ -276,12 +301,12 @@ class group(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def picture(self) -> str:
-        return self._picture
+    def need(self) -> int:
+        return self._need
 
-    @picture.setter
-    def picture(self, value) -> None:
-        self._picture = value
+    @need.setter
+    def need(self, value) -> None:
+        self._need = value
         DatabaseManager.update()
 
     @property
@@ -303,41 +328,48 @@ class group(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def need(self) -> int:
-        return self._need
+    def picture(self) -> str:
+        return self._picture
 
-    @need.setter
-    def need(self, value) -> None:
-        self._need = value
+    @picture.setter
+    def picture(self, value) -> None:
+        self._picture = value
         DatabaseManager.update()
 
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
+    @classmethod
+    def create(cls, verification, name, kind, need, owner_id, currency, picture=str(nullable=True)) -> Group:
+        Group = cls(verification, name, kind, need,
+                    owner_id, currency, picture)
+        DatabaseManager.create(Group)
+        return Group
 
-class event(db.Model, UserMixin):
+
+class Event(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
     _describe = db.Column(db.Text, nullable=False, unique=False)
     _note = db.Column(db.Text, nullable=False, unique=False)
-    _picture = db.Column(db.Text, nullable=True, unique=False)
-    _date = db.Column(db.DateTime, nullable=False, unique=False)
-    _kind = db.Column(db.String, nullable=False, unique=False)
     _payer_id = db.Column(db.Integer, nullable=False, unique=False)
+    _datatime = db.Column(db.DateTime, nullable=False, unique=False)
+    _kind = db.Column(db.String, nullable=False, unique=False)
+    _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, group_id, describe, note, picture, date, kind, payer_id) -> None:
+    def __init__(self, group_id, describe, note, payer_id, datatime, kind, picture) -> None:
         self._group_id = group_id
         self._describe = describe
         self._note = note
-        self._picture = picture
-        self._date = date
-        self._kind = kind
         self._payer_id = payer_id
+        self._datatime = datatime
+        self._kind = kind
+        self._picture = picture
 
     def __repr__(self) -> str:
-        return '<event {}>'.format(self._group_id, self._describe, self._note, self._picture, self._date, self._kind, self._payer_id)
+        return '<Event {}>'.format(self._describe)
 
     @property
     def group_id(self) -> int:
@@ -367,21 +399,21 @@ class event(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def picture(self) -> str:
-        return self._picture
+    def payer_id(self) -> int:
+        return self._payer_id
 
-    @picture.setter
-    def picture(self, value) -> None:
-        self._picture = value
+    @payer_id.setter
+    def payer_id(self, value) -> None:
+        self._payer_id = value
         DatabaseManager.update()
 
     @property
-    def date(self) -> datetime.datetime():
-        return self._date
+    def datatime(self) -> datetime:
+        return self._datatime
 
-    @date.setter
-    def date(self, value) -> None:
-        self._date = value
+    @datatime.setter
+    def datatime(self, value) -> None:
+        self._datatime = value
         DatabaseManager.update()
 
     @property
@@ -394,19 +426,26 @@ class event(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def payer_id(self) -> int:
-        return self._payer_id
+    def picture(self) -> str:
+        return self._picture
 
-    @payer_id.setter
-    def payer_id(self, value) -> None:
-        self._payer_id = value
+    @picture.setter
+    def picture(self, value) -> None:
+        self._picture = value
         DatabaseManager.update()
 
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
+    @classmethod
+    def create(cls, group_id, describe, note, payer_id, datatime, kind, picture=str(nullable=True)) -> Event:
+        Event = cls(group_id, describe, note, payer_id,
+                    datatime, kind, picture)
+        DatabaseManager.create(Event)
+        return Event
 
-class event_of_pending(db.Model, UserMixin):
+
+class Event_Of_Pending(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
@@ -422,7 +461,7 @@ class event_of_pending(db.Model, UserMixin):
         self._agree = agree
 
     def __repr__(self) -> str:
-        return '<event_of_pending {}>'.format(self._event_id, self._user_id, self._personal_expenses, self._agree)
+        return '<Event_Of_Pending {} {}>'.format(self._event_id, self._user_id)
 
     @property
     def event_id(self) -> int:
@@ -463,8 +502,14 @@ class event_of_pending(db.Model, UserMixin):
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
+    @classmethod
+    def create(cls, event_id, user_id, personal_expenses, agree) -> Event_Of_Pending:
+        Event_Of_Pending = cls(event_id, user_id, personal_expenses, agree)
+        DatabaseManager.create(Event_Of_Pending)
+        return Event_Of_Pending
 
-class message_of_event(db.Model, UserMixin):
+
+class Message_Of_Event(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
@@ -478,7 +523,7 @@ class message_of_event(db.Model, UserMixin):
         self._messages = messages
 
     def __repr__(self) -> str:
-        return '<message_of_event {}>'.format(self._event_id, self._user_id, self._messages)
+        return '<Message_Of_Event {} {}>'.format(self._event_id, self._user_id)
 
     @property
     def event_id(self) -> int:
@@ -509,3 +554,9 @@ class message_of_event(db.Model, UserMixin):
 
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
+
+    @classmethod
+    def create(cls, event_id, user_id, messages) -> Message_Of_Event:
+        Message_Of_Event = cls(event_id, user_id, messages)
+        DatabaseManager.create(Message_Of_Event)
+        return Message_Of_Event
