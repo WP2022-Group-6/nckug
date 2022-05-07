@@ -89,15 +89,15 @@ class User(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, name, password, email, picture=str(nullable=True)) -> User:
+    def create(cls, name, password, email, picture=None) -> User:
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the database.')
-        User = cls(name, password, email, picture)
-        DatabaseManager.create(User)
-        return User
+        user = cls(name, password, email, picture)
+        DatabaseManager.create(user)
+        return user
 
 
-class Group_Of_Users(db.Model, UserMixin):
+class GroupOfUsers(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
@@ -105,21 +105,19 @@ class Group_Of_Users(db.Model, UserMixin):
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
     _user_name = db.Column(db.String, nullable=False, unique=False)
     _personal_balance = db.Column(db.Integer, nullable=False, unique=False)
-    _remit = db.Column(db.Boolean, nullable=False, unique=False)
     _account = db.Column(db.String, nullable=False, unique=False)
-    _already_remittance = db.Column(db.Integer, nullable=False, unique=False)
+    _received = db.Column(db.Integer, nullable=False, unique=False)
 
-    def __init__(self, user_id, group_id, user_name, personal_balance, remit, account, already_remittance) -> None:
+    def __init__(self, user_id, group_id, user_name, personal_balance, account, received) -> None:
         self._user_id = user_id
         self._group_id = group_id
         self._user_name = user_name
         self._personal_balance = personal_balance
-        self._remit = remit
         self._account = account
-        self._already_remittance = already_remittance
+        self._received = received
 
     def __repr__(self) -> str:
-        return '<Group_Of_Users {} {}>'.format(self._user_id, self._group_id)
+        return '<GroupOfUsers {} {}>'.format(self._user_id, self._group_id)
 
     @property
     def user_id(self) -> int:
@@ -158,15 +156,6 @@ class Group_Of_Users(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def remit(self) -> bool:
-        return self._remit
-
-    @remit.setter
-    def remit(self, value) -> None:
-        self._remit = value
-        DatabaseManager.update()
-
-    @property
     def account(self) -> str:
         return self._account
 
@@ -176,26 +165,26 @@ class Group_Of_Users(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def already_remittance(self) -> int:
-        return self._already_remittance
+    def received(self) -> int:
+        return self._received
 
-    @already_remittance.setter
-    def already_remittance(self, value) -> None:
-        self._already_remittance = value
+    @received.setter
+    def received(self, value) -> None:
+        self._received = value
         DatabaseManager.update()
 
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, user_id, group_id, user_name, personal_balance, remit, account, already_remittance) -> Group_Of_Users:
-        Group_Of_Users = cls(user_id, group_id, user_name,
-                             personal_balance, remit, account, already_remittance)
-        DatabaseManager.create(Group_Of_Users)
-        return Group_Of_Users
+    def create(cls, user_id, group_id, user_name, personal_balance, account, received) -> GroupOfUsers:
+        groupofusers = cls(user_id, group_id, user_name,
+                           personal_balance, account, received)
+        DatabaseManager.create(groupofusers)
+        return groupofusers
 
 
-class Users_Without_Verify(db.Model, UserMixin):
+class UsersWithoutVerify(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _email = db.Column(db.String, nullable=False, unique=True)
@@ -208,7 +197,7 @@ class Users_Without_Verify(db.Model, UserMixin):
         self._create_time = create_time
 
     def __repr__(self) -> str:
-        return '<Users_Without_Verify {}>'.format(self._email)
+        return '<UsersWithoutVerify {}>'.format(self._email)
 
     @property
     def email(self) -> str:
@@ -241,31 +230,34 @@ class Users_Without_Verify(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, email, verification, create_time) -> Users_Without_Verify:
+    def create(cls, email, verification, create_time) -> UsersWithoutVerify:
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
-            raise ValueError('This email already exists in the database.')
-        Users_Without_Verify = cls(email, verification, create_time)
-        DatabaseManager.create(Users_Without_Verify)
-        return Users_Without_Verify
+            raise ValueError(
+                'This email already exists in the UsersWithoutVerify table.')
+        if cls.query.filter(func.lower(User._email) == func.lower(email)).first() is not None:
+            raise ValueError('This email already exists in the User table.')
+        userswithoutverify = cls(email, verification, create_time)
+        DatabaseManager.create(userswithoutverify)
+        return userswithoutverify
 
 
-class Group(db.Model, UserMixin):
+class Group(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
     _verification = db.Column(db.String, nullable=False, unique=False)
     _name = db.Column(db.String, nullable=False, unique=False)
-    _kind = db.Column(db.String, nullable=False, unique=False)
-    _need = db.Column(db.Integer, nullable=False, unique=False)
+    _type = db.Column(db.String, nullable=False, unique=False)
+    _payment = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, verification, name, kind, need, owner_id, currency, picture) -> None:
+    def __init__(self, verification, name, type, payment, owner_id, currency, picture) -> None:
         self._verification = verification
         self._name = name
-        self._kind = kind
-        self._need = need
+        self._type = type
+        self._payment = payment
         self._owner_id = owner_id
         self._currency = currency
         self._picture = picture
@@ -292,21 +284,21 @@ class Group(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def kind(self) -> str:
-        return self._kind
+    def type(self) -> str:
+        return self._type
 
-    @kind.setter
-    def kind(self, value) -> None:
-        self._kind = value
+    @type.setter
+    def type(self, value) -> None:
+        self._type = value
         DatabaseManager.update()
 
     @property
-    def need(self) -> int:
-        return self._need
+    def payment(self) -> int:
+        return self._payment
 
-    @need.setter
-    def need(self, value) -> None:
-        self._need = value
+    @payment.setter
+    def payment(self, value) -> None:
+        self._payment = value
         DatabaseManager.update()
 
     @property
@@ -340,36 +332,36 @@ class Group(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, verification, name, kind, need, owner_id, currency, picture=str(nullable=True)) -> Group:
-        Group = cls(verification, name, kind, need,
+    def create(cls, verification, name, type, payment, owner_id, currency, picture=None) -> Group:
+        group = cls(verification, name, type, payment,
                     owner_id, currency, picture)
-        DatabaseManager.create(Group)
-        return Group
+        DatabaseManager.create(group)
+        return group
 
 
-class Event(db.Model, UserMixin):
+class Event(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
-    _describe = db.Column(db.Text, nullable=False, unique=False)
+    _description = db.Column(db.Text, nullable=False, unique=False)
     _note = db.Column(db.Text, nullable=False, unique=False)
     _payer_id = db.Column(db.Integer, nullable=False, unique=False)
     _datatime = db.Column(db.DateTime, nullable=False, unique=False)
-    _kind = db.Column(db.String, nullable=False, unique=False)
+    _type = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, group_id, describe, note, payer_id, datatime, kind, picture) -> None:
+    def __init__(self, group_id, description, note, payer_id, datatime, type, picture) -> None:
         self._group_id = group_id
-        self._describe = describe
+        self._description = description
         self._note = note
         self._payer_id = payer_id
         self._datatime = datatime
-        self._kind = kind
+        self._type = type
         self._picture = picture
 
     def __repr__(self) -> str:
-        return '<Event {}>'.format(self._describe)
+        return '<Event {}>'.format(self._description)
 
     @property
     def group_id(self) -> int:
@@ -381,12 +373,12 @@ class Event(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def describe(self) -> str:
-        return self._describe
+    def description(self) -> str:
+        return self._description
 
-    @describe.setter
-    def describe(self, value) -> None:
-        self._describe = value
+    @description.setter
+    def description(self, value) -> None:
+        self._description = value
         DatabaseManager.update()
 
     @property
@@ -417,12 +409,12 @@ class Event(db.Model, UserMixin):
         DatabaseManager.update()
 
     @property
-    def kind(self) -> str:
-        return self._kind
+    def type(self) -> str:
+        return self._type
 
-    @kind.setter
-    def kind(self, value) -> None:
-        self._kind = value
+    @type.setter
+    def type(self, value) -> None:
+        self._type = value
         DatabaseManager.update()
 
     @property
@@ -438,14 +430,14 @@ class Event(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, describe, note, payer_id, datatime, kind, picture=str(nullable=True)) -> Event:
-        Event = cls(group_id, describe, note, payer_id,
-                    datatime, kind, picture)
-        DatabaseManager.create(Event)
-        return Event
+    def create(cls, group_id, description, note, payer_id, datatime, type, picture=None) -> Event:
+        event = cls(group_id, description, note, payer_id,
+                    datatime, type, picture)
+        DatabaseManager.create(event)
+        return event
 
 
-class Event_Of_Pending(db.Model, UserMixin):
+class EventOfPending(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
@@ -461,7 +453,7 @@ class Event_Of_Pending(db.Model, UserMixin):
         self._agree = agree
 
     def __repr__(self) -> str:
-        return '<Event_Of_Pending {} {}>'.format(self._event_id, self._user_id)
+        return '<EventOfPending {} {}>'.format(self._event_id, self._user_id)
 
     @property
     def event_id(self) -> int:
@@ -503,13 +495,13 @@ class Event_Of_Pending(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, event_id, user_id, personal_expenses, agree) -> Event_Of_Pending:
-        Event_Of_Pending = cls(event_id, user_id, personal_expenses, agree)
-        DatabaseManager.create(Event_Of_Pending)
-        return Event_Of_Pending
+    def create(cls, event_id, user_id, personal_expenses, agree) -> EventOfPending:
+        eventofpending = cls(event_id, user_id, personal_expenses, agree)
+        DatabaseManager.create(eventofpending)
+        return eventofpending
 
 
-class Message_Of_Event(db.Model, UserMixin):
+class MessageOfEvent(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
@@ -523,7 +515,7 @@ class Message_Of_Event(db.Model, UserMixin):
         self._messages = messages
 
     def __repr__(self) -> str:
-        return '<Message_Of_Event {} {}>'.format(self._event_id, self._user_id)
+        return '<MessageOfEvent {} {}>'.format(self._event_id, self._user_id)
 
     @property
     def event_id(self) -> int:
@@ -556,7 +548,7 @@ class Message_Of_Event(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, event_id, user_id, messages) -> Message_Of_Event:
-        Message_Of_Event = cls(event_id, user_id, messages)
-        DatabaseManager.create(Message_Of_Event)
-        return Message_Of_Event
+    def create(cls, event_id, user_id, messages) -> MessageOfEvent:
+        messageofevent = cls(event_id, user_id, messages)
+        DatabaseManager.create(messageofevent)
+        return messageofevent
