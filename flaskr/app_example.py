@@ -1,6 +1,4 @@
-import json
-
-from flask import request
+from flask import request, jsonify
 
 from flaskr import config
 from flaskr import app
@@ -8,12 +6,12 @@ from flaskr import app
 
 @app.route('/example/str', methods=['GET'])
 def example_str():
-    return json.dumps('Hello world!', ensure_ascii=False)
+    return jsonify('Hello world!')
 
 
 @app.route('/example/int', methods=['GET'])
 def example_int():
-    return json.dumps(213, ensure_ascii=False)
+    return jsonify(213)
 
 
 @app.route('/example/dict', methods=['GET'])
@@ -25,7 +23,7 @@ def example_dict():
     else:
         data['data-source'] = 'fake data'
 
-    return json.dumps(data, ensure_ascii=False)
+    return jsonify(data)
 
 
 @app.route('/example/list', methods=['GET'])
@@ -37,10 +35,17 @@ def example_list():
     else:
         data.append('fake data')
 
-    return json.dumps(data, ensure_ascii=False)
+    return jsonify(data)
 
 
 @app.route('/example/get', methods=['GET'])
 def example_get():
-    data = 'key = {}'.format(request.args.get('key', 'None'))
-    return json.dumps(data, ensure_ascii=False)
+    key = request.args.get('key', None)
+
+    try:
+        key = int(key)
+        data = 'key = {}'.format(key)
+    except:
+        data = 'input error'
+
+    return jsonify(data)
