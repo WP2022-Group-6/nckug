@@ -187,6 +187,7 @@ class GroupOfUsers(db.Model):
 class UsersWithoutVerify(db.Model):
     __table_args__ = {'extend_existing': True}
 
+    _id = db.Column(db.Integer, primary_key=True)
     _email = db.Column(db.String, nullable=False, unique=True)
     _verification = db.Column(db.String, nullable=False, unique=False)
     _create_time = db.Column(db.DateTime, nullable=False, unique=False)
