@@ -3,6 +3,7 @@ from flask import request, jsonify
 from flaskr import config
 from flaskr import app
 
+
 @app.route('/example/str', methods=['GET'])
 def example_str():
     return jsonify('Hello world!')
