@@ -1,1 +1,1 @@
-API_DEMO_MODE = True
+API_DEMO_MODE = False

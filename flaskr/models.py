@@ -48,7 +48,7 @@ class User(db.Model, UserMixin):
     @property
     def name(self) -> str:
         return self._name
-
+    
     @name.setter
     def name(self, value) -> None:
         self._name = value
