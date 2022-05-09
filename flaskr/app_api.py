@@ -2,6 +2,7 @@ import json
 from flask import request, abort, jsonify
 
 from flaskr import config
+from flaskr.models import User
 from flaskr import app
 
 
@@ -20,7 +21,10 @@ def login():
     data = {'user_id': None}
 
     if not config.API_DEMO_MODE:    # check password
-        pass
+        user = User.query.filter_by(_email=email).first()
+        if user and user.check_password(password):
+            data['user_id'] = user._id
+
     else:  # 可不做任何檢查，因為只要用收到的"字串"與database中的"字串"比對，不一樣就回傳None即可
         data['user_id'] = 12345
 
