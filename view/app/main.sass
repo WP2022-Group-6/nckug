@@ -1,0 +1,465 @@
+@import 'foundation'
+    
+body
+    width: 100vw
+    background-color: #FFF3E0
+    color: white
+
+/********************************/
+/*     01. Section main-top     */
+/********************************/
+.main-top
+    display: flex
+    justify-content: center
+    align-items: center
+    width: 100vw
+    height: 25vh
+    background-color: #EFA159
+
+.main-dashed
+    border-style: dashed !important
+    border-radius: 50px 50px 0 0
+    border: 1.7vw solid #AE6D0C
+    width: 95vw
+    height: 22vh
+
+.main-top-text
+    display: flex
+    flex-direction: column
+    align-items: center
+    p, h1, h2, h3
+        font-weight: 600
+        z-index: 10
+        margin: 0
+    p
+        margin-right: 30vw
+    h1
+        font-size: 2.5rem
+    i
+        align-self: baseline
+        width: 2em
+        height: 1.5em
+        display: flex
+        align-items: flex-end
+        justify-content: center
+
+.main-top-ellipse
+    border-radius: 50%
+    background-color: #605416
+    position: absolute
+    transform: rotateZ(-45deg)
+    width: 43vw
+    height: 30vw
+    top: 7vh
+    left: 35vw
+
+.main-top-circuit
+    border-radius: 50%
+    background-color: #AE6D0C
+    position: absolute
+    width: 32vw
+    height: 32vw
+    left: 23vw
+    top: 6vh
+
+/***********************************/
+/*     02. Section main-buttom     */
+/***********************************/
+.main-buttom-banner
+    position: fixed
+    bottom: 0
+    height: 70px
+    width: 100vw
+    background-color: #EFA159
+    display: flex
+    justify-content: space-around
+    align-items: center
+    border-radius: 10px 10px 0 0
+    color: #605416
+    i
+        width: 15vw
+        height: 15vw
+        display: flex
+        align-items: center
+        justify-content: center
+    i:nth-child(3)
+        color: #FFF3E0
+        border-radius: 50%
+        background-color: #AE6D0C
+
+/***************************************/
+/*     03. Section remittance-page     */
+/***************************************/
+.remittance-page
+    @include jump-page($bg-color: #FFF3E0, $h: 98.5vh)
+    color: #808080
+    z-index: 10
+    h1
+        font-size: 3.5rem
+        padding: 2vh
+        margin-bottom: 1vh
+    h2
+        margin: 0.2em auto !important
+        font-size: 2rem
+        border-radius: 10px
+        background-color: #798337
+        color: white
+        padding: 1vw 3vw
+    h3
+        font-size: 1.7rem
+        margin: 0
+    p
+        font-size: 1.5rem
+        font-weight: 600
+    button
+        @extend %btn-style
+        margin-top: auto
+        margin-bottom: 10vh
+
+.remittance-group
+    @include flex-center
+    @include circle
+    background: #808080
+    i
+        color: #FFF3E0
+    img
+        width: 100%
+
+/*******************************************/
+/*     03-1. Section remittance-unpaid     */
+/*******************************************/
+.remittance-unpaid h2
+    width: 70vw
+
+.remittance-account
+    width: 70vw
+    border: 1.7vw solid #AE6D0C
+    border-style: dashed
+    padding: 4vh 3vw
+    margin: 3vh
+    h3:nth-child(2)
+        color: #808080
+        background-color: #c4c4c4
+        border-radius: 10px
+        padding: 1vw 3vw
+        margin: 1rem 0 0 0
+
+/*****************************************/
+/*     03-2. Section remittance-paid     */
+/*****************************************/
+.remittance-paid
+    h2
+        width: 4em
+    p
+        text-align: center
+        margin: 0
+    i
+        @include circle
+        @include flex-center
+        background-color: white
+        color: #B5A24C
+        margin: 2vh 0
+
+/*********************************/
+/*     04. Section home-page     */
+/*********************************/
+.home-page
+    padding: 1vh 8vw
+    color: #808080
+    h3 
+        margin: 1vh 0
+    p
+        margin: 0
+        text-align: end
+        font-weight: 600
+
+.hone-barchart-div
+    margin: 0 auto 2vh auto
+    width: 84vw
+    height: 15vh
+
+.home-recored
+    @include flex-center($dir: column)
+    row-gap: 1vh
+    div
+        display: inline-flex
+        justify-content: space-around
+        align-items: center
+        width: 80%
+        height: 14vw
+        border-radius: 10px
+        background-color: white
+        border: 1.1vw solid #EFA159
+        h3:nth-child(1)
+            width: 40%
+            text-align: center
+        i
+            color: #B5A24C
+
+/**********************************/
+/*     05. Section group-page     */
+/**********************************/
+.group-page
+    display: flex
+    flex-direction: column
+    padding: 1vh 10vw
+    color: #808080
+    height: calc(75% - 70px)
+    h3
+        font-size: 1.5rem
+        margin: 1vh 0
+    button
+        @extend %btn-style
+        align-self: center
+        margin: auto 0 5vh 0
+        background-color: #AE6D0C
+
+.group-recored
+    display: flex
+    flex-direction: column
+    align-items: flex-end
+    row-gap: 5vw
+    margin: 3vw 0
+    div
+        display: inline-flex
+        width: 75vw
+        height: 9vh
+        border-radius: 20px
+        background-color: white
+        box-shadow: 0 0.2em 0.2em #00000059
+        align-items: center
+        column-gap: 6.5vw
+        div
+            width: 12vw
+            height: 12vw
+            border-radius: 50%
+            background-color: #EFA159
+            transform: translateX(-6vw)
+        h3:nth-child(2)
+            width: 30vw
+        h3:nth-child(3)
+            width: 20vw
+    .group-invite-others
+        div
+            background-color: #E5E5E5
+        h3
+            width: 56.5vw !important
+
+/**************************************/
+/*     06. Section add-event-page     */
+/**************************************/
+.add-event-page
+    @include jump-page($bg-color: #F7CA9C, $h: 98.5vh)
+    z-index: 10
+    i.close
+        margin: 1vh 5vw 0 0
+        color: #808080
+        align-self: end
+    section
+        position: absolute
+        bottom: 0
+        height: 77vh
+        display: flex
+        flex-direction: column
+        width: 100vw
+        background-color: #FFF3E0
+        color: #808080
+
+.add-event-money
+    h1
+        align-self: baseline
+        margin: 0
+    div
+        @include flex-center
+        background-color: white
+        border-radius: 15px
+        width: 80vw
+        height: 9vh
+        box-shadow: 0 0.2em 0.2em #00000059
+        input
+            border: 0
+            border-bottom: 3px solid #EFA159
+            width: 70vw
+            height: 5vh
+            font-size: 1.7rem
+            &:focus
+                outline: none
+
+.add-event-image
+    position: absolute
+    bottom: 77vh
+    right: 0
+    display: flex
+    justify-content: flex-end
+    align-items: flex-end
+    width: 15vw
+    height: 15vw
+    background-color: #798337
+    border-radius: 100% 0 0 0
+    margin-left: auto
+    i
+        margin: 1.5vw
+        
+
+/*******************************************/
+/*     06-1. Section add-event-content     */
+/*******************************************/
+.add-event-content
+    padding: 1vh 10vw
+    h2
+        margin: 0.2em 0
+    input
+        @extend %input-style
+        background-color: #F6BF6A
+        height: 5vh
+        width: 100%
+    button
+        @extend %btn-style
+        align-self: center
+        margin: auto
+    div
+        display: inline-flex
+        align-items: center
+        column-gap: 2vw
+        div
+            @include circle($radi: 17vw)
+            background-color: #EFA159
+        i
+            @include flex-center
+            margin-left: auto
+            border-radius: 10px
+            background-color: #F6BF6A
+            width: 7vw
+            height: 8vw
+            
+/***************************************/
+/*     06-2. Section split-account     */
+/***************************************/
+.split-account button
+    @extend %btn-style
+    align-self: center
+    margin: auto 0 10vh 0
+
+.split-account-navbar
+    display: flex
+    justify-content: center
+    :nth-child(odd)
+        background-color: #EFA159
+    :nth-child(even)
+        background-color: #B5A24C
+    :nth-child(1)
+        border: 1.5vw solid #AE6D0C
+        
+.split-way
+    @include flex-center
+    display: flex !important
+    width: 25vw !important
+    height: 12.5vw !important
+    border-radius: 0 0 25vw 25vw
+    margin: 0 !important
+    color: white
+    i
+        border: 0 !important
+        background-color: transparent !important
+        
+.split-account-content
+    padding: 1vh 10vw
+
+.split-content-depiction
+    display: flex
+    justify-content: space-between
+    align-items: center
+    height: 3vh
+    p
+        color: #A8A8A8
+        font-weight: 600
+        margin: 0
+    i
+        width: fit-content
+        display: flex
+        align-items: center
+        height: 100%
+        h3
+            margin-left: 1vw
+
+/********************************************/
+/*     06-3. Section denial-reason-page     */
+/********************************************/
+.split-recored
+    display: flex
+    flex-direction: column
+    align-items: flex-end
+    row-gap: 3vw
+    margin: 3vw 0
+    div
+        display: inline-flex
+        justify-content: space-around
+        align-items: center
+        width: 75vw
+        height: 15vw
+        border-radius: 10px
+        background-color: white
+        border: 1.1vw solid #EFA159
+        div
+            @include circle($radi: 12vw)
+            transform: translateX(-6vw)
+        h3
+            transform: translateX(-6vw)
+            margin: 0 auto 0 3vw
+        input
+            width: 3em
+            height: 3em
+            border: 0
+            margin-right: 3vw
+            font-weight: 600
+            &::placeholder
+                transform: translateY(-0.5rem)
+                white-space: normal
+
+.denial-reason-page
+    padding: 1vh 10vw
+    align-items: center
+    h1
+        @include flex-center
+        background-color: #B54C4C
+        color: white
+        width: 34vw
+        height: 7vh
+        border-radius: 10px
+        z-index: 10
+        margin: 4vh 0 0 0
+        box-shadow: 0 0.1em 0.1em #00000059
+    h2
+        margin: 0.2em 0
+        align-self: baseline
+    input
+        background-color: #F6BF6A
+        height: 5vh
+        width: 100%
+        border-radius: 15px
+        border: 0
+        padding-left: 1rem
+
+.denial-container
+    background-color: white
+    width: 75vw
+    border-radius: 40px
+    padding: 10vw
+    transform: translateY( -3.5vh )
+    box-shadow: 0 0.2em 0.2em #00000059
+    h3, input
+        @include flex-center
+        color: white
+        width: 100%
+        background-color: #808080
+        height: 6vh
+        border-radius: 10px
+        margin: 3vh 0
+    input
+        outline-color: #E8E8E8
+        font-size: 1.28571429rem
+        text-align: center
+        &::placeholder
+            color: white
+            font-weight: 600
+

@@ -1,0 +1,148 @@
+@import 'foundation'
+
+input:focus
+    outline: none
+
+body
+    width: 100vw
+    display: inline-flex
+    align-items: center
+    flex-direction: column
+    justify-content: space-evenly
+    background-color: #FFF3E0
+    color: white
+
+.entrance-title
+    @include flex-center
+    font-size: 2.5rem
+    background-color: #ae6d0c
+    border-radius: 30px
+    width: 70vw
+    height: 35vw
+    box-shadow: 0 0.2em 0.2em #00000059
+
+.entrance-btn
+    @extend %btn-style
+    margin: 7% 0%
+
+.login-page
+    @include jump-page
+    h1
+        font-size: 3rem
+        padding: 5%
+    div h2
+        margin: 0.5em 0 !important
+        font-size: 1.7rem
+    div input
+        @extend %input-style
+        height: 12vw
+        width: 70vw
+        box-shadow: 0 0.2em 0.2em #00000059
+        &::placeholder
+            font-size: 1.2em
+            color: #808080
+            font-weight: 600
+
+.choose-group-page
+    @include jump-page($h: 62vh)
+    button
+        @extend %btn-style
+        margin: 2% 0%
+    .group-enter
+        width: 30vw
+        background-color: #798337
+
+.choose-text
+    @include flex-center($dir: column)
+    border-radius: 15px
+    background-color: #ae6d0c
+    width: 60vw
+    font-size: 1.3rem
+    height: 7vh
+    margin-top: 5%
+    p
+        margin: 0
+
+.group-container
+    display: flex
+    align-items: center
+    margin: 5%
+    div
+        @include circle
+        img
+            width: 100%
+    div:nth-child(1)
+        transform: translateX(10vw)
+        border: 1.5vw solid #EFA159
+        background-color: #EFA159
+    div:nth-child(2)
+        border: 1.5vw solid #FFF3E0
+        background-color: #FFF3E0
+        z-index: 10
+    div:nth-child(3)
+        transform: translateX(-10vw)
+        border: 1.5vw solid #B5A24C
+        background-color: #B5A24C
+    div:nth-child(4)
+        opacity: 0
+        position: absolute
+    :nth-child(5)
+        position: absolute
+        left: 0.5rem
+    :nth-child(6)
+        position: absolute
+        right: 0.5rem
+
+.create-group-page, .join-group-page, .who-am-i-page
+    @include jump-page($bg-color: #F6BF6A, $h: 90vh)
+    h1
+        font-size: 3rem
+        padding: 3%
+        margin: 0
+    i.arrow.left.icon
+        align-self: baseline
+        width: 2em
+        height: 2em
+        display: flex
+        align-items: center
+        justify-content: center
+    button
+        @extend %btn-style
+        margin: auto 0 10vw 0
+
+.create-pic, .who-am-i-pic
+    @include flex-center
+    @include circle($radi: 30vw)
+    background-color: #FFF3E0
+    z-index: 10
+
+.create-container, .join-container, .who-am-i-container
+    @include flex-center($dir: column)
+    box-shadow: 0 0.2em 0.2em #00000059
+    background-color: #efa159
+    border-radius: 40px
+    width: 75vw
+    transform: translateY( -15vw )
+    padding: 15vw 10vw 10vw 10vw
+    div
+        width: 55vw
+    h2
+        margin: 0.5em 0 !important
+        font-size: 1.7rem
+    input
+        @extend %input-style
+        height: 12vw
+        width: 100%
+
+.create-two-input
+    display: inline-flex
+    justify-content: space-between
+    div
+        width: 45%
+
+.join-container
+    transform: none
+    margin: 15vw 0
+
+.who-am-i-container h2
+    align-self: baseline

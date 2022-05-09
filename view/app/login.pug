@@ -1,0 +1,101 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Team Debit
+
+    // Third Party CSS
+    link(href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet" type="text/css")
+    
+    // Customized CSS
+    link(href="./login.sass" rel="stylesheet")
+  body
+    // 首頁
+    h1.entrance-title Team Debit
+    div
+      button.entrance-btn 登入
+      br
+      button.entrance-btn 註冊
+
+    // 登入頁面
+    section.login-page.transition.hidden
+      h1 登入
+      div
+        h2 帳號
+        input(type="text" placeholder="電子郵件")
+      div
+        h2 密碼
+        input(type="text" placeholder="密碼")
+      button.entrance-btn 登入
+
+    // 選擇群組畫面
+    section.choose-group-page.transition.hidden
+      .choose-text
+        p 請選擇進入您原有的群組
+        p 或者創立群組
+      .group-container
+        diV
+        div
+        div
+        div
+        i.big.grey.angle.left.icon
+        i.big.grey.angle.right.icon
+      button.group-enter 進入群組
+      button 創立群組
+      button 加入現有群組
+  
+    // 創立群組頁面
+    section.create-group-page.transition.hidden
+      i.big.grey.arrow.left.icon
+      h1 創立群組
+      .create-pic
+        i.huge.icons
+          i.grey.image.icon
+          i.grey.top.right.corner.add.icon
+      .create-container
+        div
+          h2 名稱
+          input(type="text")
+        .create-two-input
+          div
+            h2 幣別
+            input(type="text")
+          div
+            h2 類型
+            input(type="text")
+        div
+          h2 餘額通知
+          input(type="text")
+      button 下一步
+
+    // 加入群組頁面
+    section.join-group-page.transition.hidden
+      i.big.grey.arrow.left.icon
+      h1 加入群組
+      .join-container
+        div
+          h2 群組ID
+          input(type="text")
+        div
+          h2 群組密碼
+          input(type="text")
+      button 下一步
+
+    //我是誰頁面(for both create and join)
+    section.who-am-i-page.transition.hidden
+      i.big.grey.arrow.left.icon
+      h1 我是誰??
+      .who-am-i-pic
+        i.user.circle.outline.icons
+      .who-am-i-container
+        h2 暱稱
+        input(type="text")
+      button 創立群組
+
+
+    // JavaScript
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js")
+    script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js")
+    //script(src="login.js")
