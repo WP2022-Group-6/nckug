@@ -14,7 +14,7 @@ for directory in DIR_LIST:
     if not os.path.isdir(directory):
         os.mkdir(directory)
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='{}/dist'.format(BASEDIR))
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE_PATH
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
