@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "parcel build view/app/login.pug --dist-dir dist/ --public-url ./",
-    "watch": "parcel watch view/app/login.pug --dist-dir dist/ --public-url ./",
+    "build": "parcel build view/app/* --dist-dir dist/ --public-url ./",
+    "watch": "parcel watch view/app/* --dist-dir dist/ --public-url ./",
     "clean": "rm -r dist/"
   },
   "repository": {
