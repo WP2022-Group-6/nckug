@@ -307,6 +307,43 @@ def get_group_event():
     return jsonify(data)
 
 
+@app.route('/api/get-group-near-event', methods=['GET'])
+def get_group_near_event():
+    group_id = request.args.get('group_id', '')
+    days = request.args.get('days', '')
+
+    try:
+        group_id = int(group_id)
+        days = int(days)
+    except:
+        abort(404)
+
+    data = {'total': 0, 'day-list': list()}
+
+    if not config.API_DEMO_MODE:
+        pass
+    else:
+        data['total'] = 11000
+        data['day-list'].append({
+            'date': '2022-03-09',
+            'total': 6000,
+            'transactions': [
+                {'event_id': 3, 'title': "Transaction03", 'total_money': 3000, 'state': True},
+                {'event_id': 4, 'title': "Transaction04", 'total_money': 3000, 'state': False}
+            ]
+        })
+        data['day-list'].append({
+            'date': '2022-03-08',
+            'total': 5000,
+            'transactions': [
+                {'event_id': 1, 'title': "Transaction01", 'total_money': 3500, 'state': True},
+                {'event_id': 2, 'title': "Transaction02", 'total_money': 1500, 'state': True}
+            ]
+        })
+
+    return jsonify(data)
+
+
 @app.route('/api/get-personnal-event', methods=['GET'])
 def get_personnal_event():
     group_id = request.args.get('group_id', '')
