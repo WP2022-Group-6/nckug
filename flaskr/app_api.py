@@ -1,10 +1,9 @@
+from datetime import date, datetime, timedelta
 import json
 import random
-from datetime import datetime
 import string
 
 from flask import request, abort, jsonify
-from sqlalchemy import false
 
 from flaskr import config
 from flaskr.models import User, GroupOfUsers, Group, Event, EventOfPending, MessageOfEvent, Event
@@ -189,68 +188,79 @@ def get_one_group_information():
     return jsonify(data)
 
 
-@app.route('/api/accounting', methods=['GET'])
-def accounting():
+@app.route('/api/new-transaction', methods=['GET'])
+def new_transaction():
     group_id = request.args.get('group_id', '')
     title = request.args.get('title', '')
-    payer_id = request.args.get('payer_id', '')
-    kind = request.args.get('kind', '')
+    amount = request.args.get('amount', '')
+    transaction_type = request.args.get('type', '')
+    split_method = request.args.get('split_method', '')
     divider = request.args.get('divider', '')
-    total_money = request.args.get('total_money', '')
+    payer_id = request.args.get('payer_id', '')
     note = request.args.get('note', '')
     picture = request.args.get('picture', '')
 
     try:
         group_id = int(group_id)
         payer_id = int(payer_id)
-        total_money = int(total_money)
+        amount = int(amount)
         divider = json.loads(divider)
     except:
         abort(404)
 
-    if isempty(title) or isempty(kind) or type(divider) != dict or len(divider) == 0:
+    if isempty(title) or amount <= 0 or isempty(transaction_type) or type(divider) != list or len(divider) == 0:
         abort(404)
+    if split_method not in ['average', 'percentage', 'extra', 'normal', 'number_of']:
+        abort(404)
+
+    for index in range(len(divider)):
+        try:
+            divider[index]['user_id'] = int(divider[index]['user_id'])
+            divider[index]['value'] = int(divider[index]['value'])
+        except:
+            abort(404)
 
     data = {'event_id': None}
 
     if not config.API_DEMO_MODE:
-        temp_event = Event.create(
-            group_id, title, note, payer_id, datetime.now(), kind)
-        divider_list = divider.get('divider')
-        if (divider.get('type') == 'average'):
-            money = total_money / len(divider_list)
-            for i in divider_list:
-                EventOfPending.create(
-                    temp_event._id, i.get('user_id'), money, False)
-            data = {'event_id': temp_event._id}
-        elif divider.get('type') == 'percentage':
-            for i in divider_list:
-                money = total_money * i.get('value') / 100
-                EventOfPending.create(
-                    temp_event._id, i.get('user_id'), money, False)
-            data = {'event_id': temp_event._id}
-        elif divider.get('type') == 'extra':
-            extra_money = 0
-            for i in divider_list:
-                extra_money += i.get('value')
-            for i in divider_list:
-                money = (total_money - extra_money) / len(divider_list)
-                EventOfPending.create(
-                    temp_event._id, i.get('user_id'), money + i.get('value'), False)
-            data = {'event_id': temp_event._id}
-        elif divider.get('type') == 'pratical':
-            for i in divider_list:
-                EventOfPending.create(
-                    temp_event._id, i.get('user_id'), i.get('value'), False)
-            data = {'event_id': temp_event._id}
-        elif divider.get('type') == 'number_of':
-            number_of = 0
-            for i in divider_list:
-                number_of += i.get('value')
-            for i in divider_list:
-                EventOfPending.create(
-                    temp_event._id, i.get('user_id'), total_money * i.get('value') / number_of, False)
-            data = {'event_id': temp_event._id}
+        event = Event.create(group_id=group_id, amount=amount, description=title, note=note,
+                             payer_id=payer_id, datetime=datetime.now(), type=transaction_type)
+        member_expense_sum = 0
+        if split_method == 'average':
+            personal_expenses = int(amount / len(divider))
+            for person in divider:
+                EventOfPending.create(event_id=event._id, user_id=person['user_id'],
+                                      personal_expenses=personal_expenses, agree=False)
+                member_expense_sum += personal_expenses
+        elif split_method == 'percentage':
+            for person in divider:
+                personal_expenses = amount * (person['value'] * 0.01)
+                EventOfPending.create(event_id=event._id, user_id=person['user_id'],
+                                      personal_expenses=personal_expenses, agree=False)
+                member_expense_sum += personal_expenses
+        elif split_method == 'extra':
+            common_amount = amount - sum([person['value'] for person in divider])
+            personal_common_expense = int(common_amount / len(divider))
+            for person in divider:
+                personal_expenses = personal_common_expense + person['value']
+                EventOfPending.create(event_id=event._id, user_id=person['user_id'],
+                                      personal_expenses=personal_expenses, agree=False)
+                member_expense_sum += personal_expenses
+        elif split_method == 'normal':
+            for person in divider:
+                EventOfPending.create(event_id=event._id, user_id=person['user_id'],
+                                      personal_expenses=person['value'], agree=False)
+                member_expense_sum += person['value']
+        elif split_method == 'number_of':
+            total = sum([person['value'] for person in divider])
+            for person in divider:
+                personal_expenses = int(amount / total)
+                EventOfPending.create(event_id=event._id, user_id=person['user_id'],
+                                      personal_expenses=personal_expenses, agree=False)
+                member_expense_sum += personal_expenses
+        event.amount = member_expense_sum
+        data['event_id'] = event._id
+
     else:
         data['event_id'] = 54321
 
@@ -416,7 +426,12 @@ def get_personal_money_information():
             'account': None, 'currency': None}
 
     if not config.API_DEMO_MODE:
-        pass
+        group = Group.query.get(group_id)
+        group_user = GroupOfUsers.query.filter_by(_user_id=user_id, _group_id=group_id).first()
+        data['current_balance'] = group_user.personal_balance
+        data['need_money'] = group.payment - group_user.received
+        data['account'] = group_user.account
+        data['currency'] = group.currency
     else:
         data['current_balance'] = 0
         data['need_money'] = 1000
@@ -435,10 +450,15 @@ def get_group_money_information():
     except:
         abort(404)
 
-    data = {'current_balance': None, 'currency': None}
+    data = {'current_balance': 0, 'currency': None}
 
     if not config.API_DEMO_MODE:
-        pass
+        group = Group.query.get(group_id)
+        if not group:
+            abort(404)
+        for item in (GroupOfUsers.query.filter_by(_group_id=group_id).all() or []):
+            data['current_balance'] += item.personal_balance
+        data['currency'] = group.currency
     else:
         data['current_balance'] = 200
         data['currency'] = 'NTD'
@@ -452,7 +472,7 @@ def get_group_event():
     amount = request.args.get('amount', '')
 
     try:
-        amount = int(amount)
+        amount = int(amount) if not isempty(amount) else 0
         group_id = int(group_id)
     except:
         abort(404)
@@ -460,17 +480,26 @@ def get_group_event():
     data = list()
 
     if not config.API_DEMO_MODE:    # get this person all data
-        pass
+        for item in (Event.query.filter_by(_group_id=group_id).all() or []):
+            event = {'event_id': item._id, 'title': item.description,
+                     'total_money': item.amount, 'state': True, 'date': item.datetime.date()}
+            for response in (EventOfPending.query.filter_by(_event_id=event._id).all() or []):
+                if not response.agree:
+                    event['state'] = False
+                    break
+            data.append(event)
+        data.sort(key=lambda event: date.fromisoformat(event['date']), reverse=True)
+        data = data[0:amount] if (amount > 0 and len(data) > amount) else data
+
     else:
-        for i in range(amount):
-            group = {'event_id': None, 'title': None,
-                     'total_money': None, 'state': None, 'date': None}
-            group['event_id'] = 54321 + i
-            group['title'] = 'Event {}'.format(str(i + 5))
-            group['total_money'] = 5874
-            group['state'] = False
-            group['date'] = '2022-03-{}'.format(str(10 + i))
-            data.append(group)
+        for i in range(amount if amount > 0 else 4):
+            event = {'event_id': None, 'title': None, 'total_money': None, 'state': None, 'date': None}
+            event['event_id'] = 54321 + i
+            event['title'] = 'Event {}'.format(str(i + 5))
+            event['total_money'] = 5874
+            event['state'] = False
+            event['date'] = '2022-03-{}'.format(str(10 + i))
+            data.append(event)
 
     return jsonify(data)
 
@@ -489,7 +518,20 @@ def get_group_near_event():
     data = {'total': 0, 'day-list': list()}
 
     if not config.API_DEMO_MODE:
-        pass
+        for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
+            day_info = {'date': single_date.isoformat(), 'total': 0, 'transactions': list()}
+            for event in (Event.query.filter_by(_datatime=single_date).all() or []):
+                event_info = {'event_id': event._id, 'title': event.description,
+                              'total_money': event.amount, 'state': True}
+                for response in (EventOfPending.query.filter_by(_event_id=event._id).all() or []):
+                    if not response.agree:
+                        event_info['state'] = False
+                        break
+                day_info['transactions'].append(event_info)
+                day_info['total'] += event_info['total_money']
+            data['day-list'].append(day_info)
+            data['total'] += day_info['total']
+
     else:
         data['total'] = 11000
         data['day-list'].append({
@@ -512,8 +554,8 @@ def get_group_near_event():
     return jsonify(data)
 
 
-@app.route('/api/get-personnal-event', methods=['GET'])
-def get_personnal_event():
+@app.route('/api/get-personal-event', methods=['GET'])
+def get_personal_event():
     group_id = request.args.get('group_id', '')
     user_id = request.args.get('user_id', '')
     amount = request.args.get('amount', '')
@@ -521,14 +563,23 @@ def get_personnal_event():
     try:
         group_id = int(group_id)
         user_id = int(user_id)
-        amount = int(amount)
+        amount = int(amount) if not isempty(amount) else 0
     except:
         abort(404)
 
     data = list()
 
     if not config.API_DEMO_MODE:  # get this person all data
-        pass
+        for event in (Event.query.filter_by(_group_id=group_id).all() or []):
+            event_of_pending = EventOfPending.query.filter_by(_event_id=event._id, _user_id=user_id).first()
+            event_info = {'event_id': event._id, 'name': event.description,
+                          'total_money': event_of_pending.personal_expenses, 'state': True, 'date': event.datatime.date()}
+            for response in (EventOfPending.query.filter_by(_event_id=event._id).all() or []):
+                if not response.agree:
+                    event_info['state'] = False
+                    break
+            data.append(event_info)
+
     else:
         for i in range(amount):
             event = {'event_id': None, 'name': None, 'total_money': None, 'state': None, 'date': None}
@@ -539,6 +590,8 @@ def get_personnal_event():
             event['date'] = '2022-03-{}'.format(str(10 + i))
             data.append(event)
 
+    data.sort(key=lambda event_info: date.fromisoformat(event_info['date']), reverse=True)
+    data = data[0:amount] if amount > 0 else data
     return jsonify(data)
 
 
@@ -554,7 +607,9 @@ def get_group_member():
     data = list()
 
     if not config.API_DEMO_MODE:
-        pass
+        for member in (GroupOfUsers.query.filter_by(_group_id=group_id).all() or []):
+            data.append({'user_name': member.user_name, 'balance': member.personal_balance})
+
     else:
         for i in range(1, 4):
             member = {'user_name': None, 'balance': None}

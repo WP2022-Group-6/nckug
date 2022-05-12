@@ -344,6 +344,7 @@ class Event(db.Model):
 
     _id = db.Column(db.Integer, primary_key=True)
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
+    _amount = db.Column(db.Integer, nullable=False, unique=False)
     _description = db.Column(db.Text, nullable=False, unique=False)
     _note = db.Column(db.Text, nullable=False, unique=False)
     _payer_id = db.Column(db.Integer, nullable=False, unique=False)
@@ -351,8 +352,9 @@ class Event(db.Model):
     _type = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, group_id, description, note, payer_id, datatime, type, picture) -> None:
+    def __init__(self, group_id, amount, description, note, payer_id, datatime, type, picture) -> None:
         self._group_id = group_id
+        self._amount = amount
         self._description = description
         self._note = note
         self._payer_id = payer_id
@@ -370,6 +372,15 @@ class Event(db.Model):
     @group_id.setter
     def group_id(self, value) -> None:
         self._group_id = value
+        DatabaseManager.update()
+
+    @property
+    def amount(self) -> int:
+        return self._amount
+
+    @amount.setter
+    def amount(self, value) -> None:
+        self._amount = value
         DatabaseManager.update()
 
     @property
@@ -430,9 +441,8 @@ class Event(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, description, note, payer_id, datatime, type, picture=None) -> Event:
-        event = cls(group_id, description, note, payer_id,
-                    datatime, type, picture)
+    def create(cls, group_id, amount, description, note, payer_id, datatime, type, picture=None) -> Event:
+        event = cls(group_id, amount, description, note, payer_id, datatime, type, picture)
         DatabaseManager.create(event)
         return event
 
