@@ -64,21 +64,16 @@ def get_all_group():
 
 @app.route('/api/check-group-accessible', methods=['GET'])
 def check_group_accessible():
-    group_id = request.args.get('group_id', '')
+    invitation_code = request.args.get('invitation_code', '')
     verify_code = request.args.get('verify_code', '')
 
-    try:
-        group_id = int(group_id)
-    except:
-        abort(404)
-
-    if isempty(verify_code):
+    if isempty(invitation_code) or isempty(verify_code):
         abort(404)
 
     data = False
 
     if not config.API_DEMO_MODE:
-        group = Group.query.get(group_id)
+        group = Group.query.filter_by(_invitation_code=invitation_code).first()
         if not group:
             abort(404)
         else:
@@ -125,36 +120,35 @@ def creat_group():
 @app.route('/api/join-group', methods=['GET'])
 def join_group():
     user_id = request.args.get('user_id', '')
-    group_id = request.args.get('group_id', '')
+    invitation_code = request.args.get('invitation_code', '')
     verify_code = request.args.get('verify_code', '')
     nickname = request.args.get('nickname', '')
 
     try:
-        group_id = int(group_id)
         user_id = int(user_id)
     except:
         abort(404)
 
-    if isempty(verify_code) or isempty(nickname):
+    if isempty(invitation_code) or isempty(verify_code) or isempty(nickname):
         abort(404)
 
-    data = False
+    data = {'group_id': None}
 
     if not config.API_DEMO_MODE:
-        if GroupOfUsers.query.filter_by(_group_id=group_id, user_id=user_id).first():
-            data = False
-        else:
-            group = Group.query.get(group_id)
-            if not group:
-                abort(404)
-            elif verify_code != group.verification:
-                data = False
+        group = Group.query.filter_by(_invitation_code=invitation_code).first()
+        if not group:
+            abort(404)
+        if not GroupOfUsers.query.filter_by(_group_id=group.id, _user_id=user_id).first():
+            if verify_code != group.verification:
+               data['group_id'] = None
             else:
                 account = ''.join(random.choice(string.digits) for x in range(10))
-                GroupOfUsers.create(user_id=user_id, group_id=group_id, personal_balance=0, account=account, received=0)
-                data = True
+                GroupOfUsers.create(user_id=user_id, group_id=group.id, user_name=nickname, personal_balance=0, account=account, received=0)
+                data['group_id'] = group.id
+        else:
+            data['group_id'] = group.id
     else:
-        data = True
+        data['group_id'] = 2
 
     return jsonify(data)
 
@@ -257,7 +251,10 @@ def new_transaction():
                 EventOfPending.create(event_id=event._id, user_id=person['user_id'],
                                       personal_expenses=personal_expenses, input_value=person['value'], agree=False)
                 member_expense_sum += personal_expenses
+        payer_event = EventOfPending.query.filter_by(_event_id=event.id, _user_id=payer_id).first()
+        payer_event.agree = True
         event.amount = member_expense_sum
+        event.try_close_event()
         data['event_id'] = event._id
 
     else:
@@ -291,11 +288,11 @@ def get_transaction():
             member_event = EventOfPending.query.filter_by(_event_id=event.id, _user_id=user.id).first()
             if member.id == event.payer_id:
                 data['payer_name'] = member.user_name
-            if not member_event.agree:
+            if member_event.personal_expenses > 0 and not member_event.agree:
                 data['state'] = False
             data['divider'].append({'user_id': user.id, 'nickname': member.user_name,
                                     'amount': member_event.personal_expenses, "input_value": member_event.input_value,
-                                    'picture': user.picture})
+                                    'state': member_event.agree, 'picture': user.picture})
 
     else:
         data = {
@@ -329,16 +326,18 @@ def dialoge():
     data = False
 
     if not config.API_DEMO_MODE:
-        temp = EventOfPending.query.filter_by(_event_id=event_id, _user_id=user_id).first()
+        event = Event.query.get(event_id)
+        event_of_pending = EventOfPending.query.filter_by(_event_id=event_id, _user_id=user_id).first()
         if message.get('type') == 'agree':
-            temp.agree = True
+            event_of_pending.agree = True
             data = True
         elif message.get('type') == 'disagree':
-            temp.agree = False
+            event_of_pending.agree = False
             data = True
         elif not isempty(message.get('content')):
             MessageOfEvent.create(event_id, user_id, message.get('content'))
             data = True
+        event.try_close_event()
     else:
         data = True
 
@@ -396,6 +395,36 @@ def get_user_info():
     return jsonify(data)
 
 
+@app.route('/api/get-group-user-info', methods=['GET'])
+def get_group_user_info():
+    group_id = request.args.get('group_id', '')
+    user_id = request.args.get('user_id', '')
+
+    try:
+        user_id = int(user_id)
+        group_id = int(group_id)
+    except:
+        abort(404)
+
+    data = {"user_name": "", "balance": 0, "account": "", "received": 0}
+
+    if not config.API_DEMO_MODE:
+        member = GroupOfUsers.query.filter_by(_user_id=user_id, _group_id=group_id).first()
+        if not member:
+            abort(404)
+        data['user_name'] = member.user_name
+        data['balance'] = member.personal_balance
+        data['account'] = member.account
+        data['received'] = member.received
+    else:
+        data['user_name'] = 'Nickname01'
+        data['balance'] = 500
+        data['account'] = '12c1dfwres'
+        data['received'] = 1000
+
+    return jsonify(data)
+
+
 @app.route('/api/set-personal-information', methods=['GET'])
 def set_personal_information():
     group_id = request.args.get('group_id', '')
@@ -441,7 +470,7 @@ def remittance_finished():
     if not config.API_DEMO_MODE:
         group = Group.query.get(group_id)
         group_user = GroupOfUsers.query.filter_by(_user_id=user_id, _group_id=group_id).first()
-        if (not group) and (not group_user) and (group.payment > group_user.received):
+        if group and group_user and (group.payment > group_user.received):
             group_user.personal_balance = group_user.personal_balance + (group.payment - group_user.received)
             group_user.received = group.payment
             data = True
@@ -523,9 +552,9 @@ def get_group_event():
     if not config.API_DEMO_MODE:    # get this person all data
         for item in (Event.query.filter_by(_group_id=group_id).all() or []):
             event = {'event_id': item._id, 'title': item.description,
-                     'total_money': item.amount, 'state': True, 'date': item.datetime.date()}
-            for response in (EventOfPending.query.filter_by(_event_id=event._id).all() or []):
-                if not response.agree:
+                     'total_money': item.amount, 'state': True, 'date': item.datetime.date().isoformat()}
+            for response in (EventOfPending.query.filter_by(_event_id=item.id).all() or []):
+                if response.personal_expenses > 0 and not response.agree:
                     event['state'] = False
                     break
             data.append(event)
@@ -561,15 +590,17 @@ def get_group_near_event():
     if not config.API_DEMO_MODE:
         for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
             day_info = {'date': single_date.isoformat(), 'total': 0, 'transactions': list()}
-            for event in (Event.query.filter_by(_datatime=single_date).all() or []):
+            for event in (Event.query.filter_by(_group_id=group_id).all() or []):
+                if event.datetime.date() != single_date:
+                    continue
                 event_info = {'event_id': event._id, 'title': event.description,
                               'total_money': event.amount, 'state': True}
                 for response in (EventOfPending.query.filter_by(_event_id=event._id).all() or []):
-                    if not response.agree:
+                    if response.personal_expenses > 0 and not response.agree:
                         event_info['state'] = False
                         break
                 day_info['transactions'].append(event_info)
-                day_info['total'] += event_info['total_money']
+                day_info['total'] = day_info['total'] + event_info['total_money'] if event_info['state'] else day_info['total']
             data['day-list'].append(day_info)
         data['last_day_total'] = data['day-list'][0]['total']
 
@@ -616,7 +647,7 @@ def get_personal_event():
             event_info = {'event_id': event._id, 'name': event.description,
                           'total_money': event_of_pending.personal_expenses, 'state': True, 'date': event.datatime.date()}
             for response in (EventOfPending.query.filter_by(_event_id=event._id).all() or []):
-                if not response.agree:
+                if response.personal_expenses > 0 and not response.agree:
                     event_info['state'] = False
                     break
             data.append(event_info)

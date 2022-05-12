@@ -1,4 +1,6 @@
 from __future__ import annotations
+import random
+import string
 
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,6 +8,17 @@ from flask_login import UserMixin
 
 from flaskr import db
 from datetime import datetime
+
+
+def gen_random_text(length: int, digit: bool, letter: bool) -> str:
+    if digit and letter:
+        return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
+    elif digit:
+        return ''.join(random.choice(string.digits) for x in range(length))
+    elif letter:
+        return ''.join(random.choice(string.ascii_letters) for x in range(length))
+    else:
+        return ''
 
 
 class DatabaseManager():
@@ -65,11 +78,11 @@ class User(db.Model, UserMixin):
         DatabaseManager.update()
 
     def set_password(self, password: str):
-        self._password_hash = generate_password_hash(password)
+        self._password_hash = password
         DatabaseManager.update()
 
     def check_password(self, password) -> bool:
-        return check_password_hash(self._password_hash, password)
+        return self._password_hash == password
 
     @property
     def email(self) -> str:
@@ -261,15 +274,17 @@ class Group(db.Model):
     _payment = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
+    _invitation_code = db.Column(db.String, nullable=False, unique=True)
     _verification = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, name, type, payment, owner_id, currency, verification, picture) -> None:
+    def __init__(self, name, type, payment, owner_id, currency, invitation_code, verification, picture) -> None:
         self._name = name
         self._type = type
         self._payment = payment
         self._owner_id = owner_id
         self._currency = currency
+        self._invitation_code = invitation_code
         self._verification = verification
         self._picture = picture
 
@@ -326,6 +341,15 @@ class Group(db.Model):
         DatabaseManager.update()
 
     @property
+    def invitation_code(self) -> str:
+        return self._invitation_code
+
+    @invitation_code.setter
+    def verification(self, value) -> None:
+        self._invitation_code = value
+        DatabaseManager.update()
+
+    @property
     def verification(self) -> str:
         return self._verification
 
@@ -348,7 +372,10 @@ class Group(db.Model):
 
     @classmethod
     def create(cls, name, type, payment, owner_id, currency, verification, picture=None) -> Group:
-        group = cls(name, type, payment, owner_id, currency, verification, picture)
+        invitation_code = gen_random_text(length=10, digit=True, letter=True)
+        while Group.query.filter_by(_invitation_code=invitation_code).first():
+            invitation_code = gen_random_text(length=10, digit=True, letter=True)
+        group = cls(name, type, payment, owner_id, currency, invitation_code, verification, picture)
         DatabaseManager.create(group)
         return group
 
@@ -363,19 +390,21 @@ class Event(db.Model):
     _note = db.Column(db.Text, nullable=False, unique=False)
     _payer_id = db.Column(db.Integer, nullable=False, unique=False)
     _split_method = db.Column(db.String, nullable=False, unique=False)
-    _datatime = db.Column(db.DateTime, nullable=False, unique=False)
+    _datetime = db.Column(db.DateTime, nullable=False, unique=False)
     _type = db.Column(db.String, nullable=False, unique=False)
+    _closed = db.Column(db.Boolean, nullable=True, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, group_id, amount, description, note, payer_id, split_method, datatime, type, picture) -> None:
+    def __init__(self, group_id, amount, description, note, payer_id, split_method, datetime, type, closed, picture) -> None:
         self._group_id = group_id
         self._amount = amount
         self._description = description
         self._note = note
         self._payer_id = payer_id
         self._split_method = split_method
-        self._datatime = datatime
+        self._datetime = datetime
         self._type = type
+        self._closed = closed
         self._picture = picture
 
     def __repr__(self) -> str:
@@ -440,12 +469,12 @@ class Event(db.Model):
         DatabaseManager.update()
 
     @property
-    def datatime(self) -> datetime:
-        return self._datatime
+    def datetime(self) -> datetime:
+        return self._datetime
 
-    @datatime.setter
-    def datatime(self, value) -> None:
-        self._datatime = value
+    @datetime.setter
+    def datetime(self, value) -> None:
+        self._datetime = value
         DatabaseManager.update()
 
     @property
@@ -458,6 +487,15 @@ class Event(db.Model):
         DatabaseManager.update()
 
     @property
+    def closed(self) -> bool:
+        return self._closed
+
+    @closed.setter
+    def closed(self, value) -> None:
+        self._closed = value
+        DatabaseManager.update()
+
+    @property
     def picture(self) -> str:
         return self._picture
 
@@ -466,12 +504,24 @@ class Event(db.Model):
         self._picture = value
         DatabaseManager.update()
 
+    def try_close_event(self) -> None:
+        if self.closed:
+            return
+        event_member = {item.user_id: item for item in (EventOfPending.query.filter_by(_event_id=self.id).all() or [])}
+        for item in event_member.values():
+            if item.personal_expenses > 0 and not item.agree:
+                return
+        for group_of_user in (GroupOfUsers.query.filter_by(_group_id=self.group_id) or []):
+            group_of_user.personal_balance -= event_member[group_of_user.user_id].personal_expenses
+        self.closed = True
+        return
+
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, amount, description, note, payer_id, split_method, datatime, type, picture=None) -> Event:
-        event = cls(group_id, amount, description, note, payer_id, split_method, datatime, type, picture)
+    def create(cls, group_id, amount, description, note, payer_id, split_method, datetime, type, picture=None) -> Event:
+        event = cls(group_id, amount, description, note, payer_id, split_method, datetime, type, False, picture)
         DatabaseManager.create(event)
         return event
 
