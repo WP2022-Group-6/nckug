@@ -39,27 +39,21 @@ let groupId = urlParams.get('group-id')
 let pageNow = 'home'
 let pageName = {'home': 'home-page', 'users': 'group-page'}
 
-$.get('./api/remittance-finished', {
+
+$.get('./api/get-personal-money-information', {
     user_id: userId,
     group_id: groupId
 }, (data) => {
-    if(!data){
-        $.get('./api/get-personal-money-information', {
-            user_id: userId,
-            group_id: groupId
-        }, (data) => {
-            if (data.need_money > 0) {
-                $('.remittance-unpaid h2:nth-child(1)').text('目前餘額：' + data.current_balance)
-                $('.remittance-unpaid h2:nth-child(2)').text('仍須匯款：' + data.need_money)
-                $('.remittance-account h3:nth-child(2)').text(data.account)
-                $.get('./api/get-user-info', {
-                    user_id: userId
-                }, (data2) => {
-                    $('.remittance-paid p').text(data2.name)
-                })
-                $('.remittance-page').transition('slide up')
-            }
+    if (data.need_money > 0) {
+        $('.remittance-unpaid h2:nth-child(1)').text('目前餘額：' + data.current_balance)
+        $('.remittance-unpaid h2:nth-child(2)').text('仍須匯款：' + data.need_money)
+        $('.remittance-account h3:nth-child(2)').text(data.account)
+        $.get('./api/get-user-info', {
+            user_id: userId
+        }, (data2) => {
+            $('.remittance-paid p').text(data2.name)
         })
+        $('.remittance-page').transition('slide up')
     }
 })
 
@@ -115,7 +109,7 @@ $.get('./api/get-group-event', {
         }
     }*/
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
         if (data.length > i) {
             recoredData.push(data[i].event_id)
             $('.home-recored div:nth-child(' + (i + 1) +') h3:nth-child(1)').text(data[i].title)
@@ -129,7 +123,7 @@ $.get('./api/get-group-event', {
                 }
             }
         }else {
-            $('.home-recored div:nth-child(' + (i + 1) +')').html('13')
+            $('.home-recored div:nth-child(' + (i + 1) +')').html('')
         }
     }
 })
@@ -186,6 +180,11 @@ $('.home-recored div:nth-child(1)').click(()=>{
 
 $('.remittance-page button').click(() =>{
     if($('.remittance-paid').hasClass('hidden')) {
+        $.get('./api/remittance-finished', {
+            user_id: userId,
+            group_id: groupId
+        })
+        console.log('remittance')
         $('.remittance-page button').text('開始記帳')
         $('.remittance-unpaid').transition('toggle')
         $('.remittance-paid').transition('toggle')
