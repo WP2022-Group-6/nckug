@@ -84,99 +84,72 @@ $.get('./api/get-group-near-event', {
     myChart.update()
 })
 
-let recoredData = []
-$.get('./api/get-group-event', {
-    amount: 4,
-    group_id: groupId
-}, (data) => {
-    /*
-    temp = ''
-    for (let i = 0; i < data.length; i++) {
-        recoredData.push(data[i].event_id)
-        temp += '<div class=".home-recored-event-' + i + '"><h3>' + data[i].title + '</h3><h3>' + data[i].total_money +'</h3>'
-        if (data[i].state) {
-            temp += '<i class="big check circle outline icon"></i></div>'
-        }else {
-            temp += '<i class="big times circle outline icon"></i></div>'
-        }
-    }
-    $('.home-recored').html(temp)
-    for (let i = 0; i < data.length; i++) {
-        if (data[i].state) {
-            $('.home-recored div:nth-child(' + (i + 1) +') i').css('color','#B5A24C')
-        }else {
-            $('.home-recored div:nth-child(' + (i + 1) +') i').css('color','#B54C4C')
-        }
-    }*/
+let splitMode = 'add'
+home_recored_refresh()
 
-    for (let i = 0; i < 4; i++) {
-        if (data.length > i) {
-            recoredData.push(data[i].event_id)
-            $('.home-recored div:nth-child(' + (i + 1) +') h3:nth-child(1)').text(data[i].title)
-            $('.home-recored div:nth-child(' + (i + 1) +') h3:nth-child(2)').text(data[i].total_money)
-            if ((data[i].state && $('.home-recored div:nth-child(' + (i + 1) +') i').hasClass('times')) || (!data[i].state && $('.home-recored div:nth-child(' + (i + 1) +') i').hasClass('check'))) {
-                $('.home-recored div:nth-child(' + (i + 1) +') i').toggleClass('times check')
-                if (data[i].state) {
-                    $('.home-recored div:nth-child(' + (i + 1) +') i').css('color','#B5A24C')
-                }else {
-                    $('.home-recored div:nth-child(' + (i + 1) +') i').css('color','#B54C4C')
-                }
-            }
-        }else {
-            $('.home-recored div:nth-child(' + (i + 1) +')').html('')
-        }
-    }
-})
-
-/*
-for (let i = 0; i < recoredData.length; i++) {
-    $('.home-recored div:nth-child(' + i + ')').click(()=>{
-        $.get('./api/get-transaction-info', {
-            event_id: recoredData[i]
-        }, (data) => {
-            $('.add-event-money input[name=event-money]').val(data.amount)
-            $('.add-event-content input[name=event-name]').val(data.title)
-            $('.add-event-content select[name=event-kind]').val(data.type)
-            $('.add-event-content input[name=event-memo]').val(data.note)
-        })
-        ////////////////////////////
-        console.log(i)
-        $('.add-event-money input[name=event-money]').attr('readonly','readonly')
-        $('.add-event-content input[name=event-name]').attr('readonly','readonly')
-        $('.add-event-content select[name=event-kind]').attr('disabled', true)
-        $('.add-event-content input[name=event-memo]').attr('readonly','readonly')
-        $('.add-event-page').transition('fade')
-    })
-}*/
-let splitMode = 'watch'
-$('.home-recored div:nth-child(1)').click(()=>{
-    $.get('./api/get-transaction-info', {
-        event_id: recoredData[0]
+function home_recored_refresh(){
+    $.get('./api/get-group-event', {
+        amount: 4,
+        group_id: groupId
     }, (data) => {
-        $('.add-event-money input[name=event-money]').val(data.amount)
-        $('.add-event-content input[name=event-name]').val(data.title)
-        $('.add-event-content select[name=event-kind]').val(data.type)
-        $('.add-event-content input[name=event-memo]').val(data.note)
-        console.log(data)
-        let tempPeople = ''
-        let tempRecored = ''
-        for (let i = 0; i < data.divider.length; i++) {
-            tempPeople += '<div></div>'
-            tempRecored += '<div><div></div><h3>' + data.divider[i].nickname  +'</h3><input type="number" placeholder="輸入 %數"></div>'
-        }
-        $('.split-people').html(tempPeople)
-        $('.split-recored').html(tempRecored)
-        for (let i = 0; i < data.divider.length; i++) {
-            $('.split-recored input:nth-child(3)')[i].value = data.divider[i].input_value
-            $('.split-recored input:nth-child(3)')[i].setAttribute('readonly','true')
+        $('.home-recored').html('')
+        for (let i = 0; i < data.length; i++) {
+            let tempDiv = document.createElement('div')
+            let tempName = document.createElement('h3')
+            tempName.textContent = data[i].title
+            let tempCost = document.createElement('h3')
+            tempCost.textContent  = data[i].total_money
+            let tempIcon = document.createElement('i')
+            if (data[i].state) {
+                tempIcon.classList.add('big', 'check', 'circle', 'outline', 'icon')
+                tempIcon.style.color = '#B5A24C'
+            }else {
+                tempIcon.classList.add('big', 'times', 'circle', 'outline', 'icon')
+                tempIcon.style.color = '#B54C4C'
+            }
+            tempDiv.appendChild(tempName)
+            tempDiv.appendChild(tempCost)
+            tempDiv.appendChild(tempIcon)
+            $('.home-recored').append(tempDiv)
+            document.querySelectorAll('.home-recored div')[i].addEventListener('click', function() {
+                $.get('./api/get-transaction-info', {
+                    event_id: data[i].event_id
+                }, (data1) => {
+                    $('.add-event-money input[name=event-money]').val(data1.amount)
+                    $('.add-event-content input[name=event-name]').val(data1.title)
+                    $('.add-event-content select[name=event-kind]').val(data1.type)
+                    $('.add-event-content input[name=event-memo]').val(data1.note)
+                    let tempPeople = ''
+                    let tempRecored = ''
+                    for (let i = 0; i < data1.divider.length; i++) {
+                        tempPeople += '<div></div>'
+                        tempRecored += '<div><div></div><h3>' + data1.divider[i].nickname  +'</h3><input type="number" placeholder="輸入 %數"></div>'
+                    }
+                    $('.split-people').html(tempPeople)
+                    $('.split-recored').html(tempRecored)
+                    for (let i = 0; i < data1.divider.length; i++) {
+                        $('.split-recored input:nth-child(3)')[i].value = data1.divider[i].input_value
+                        $('.split-recored input:nth-child(3)')[i].setAttribute('readonly','true')
+                    }
+                    if (data1.payer_id === userId) {
+                        $('.add-event-content .add-event-save').text('更改')
+                        $('.add-event-content .add-event-save').css('background-color','#AE6D0C')
+                        $('.add-event-content .add-event-save').attr('disabled', true)
+                    } else {
+                        $('.add-event-content .add-event-save').transition('toggle')
+                        $('.add-event-content .add-event-agreement').transition('toggle')
+                    }
+                })
+                splitMode = 'watch'
+                $('.add-event-money input[name=event-money]').attr('readonly','readonly')
+                $('.add-event-content input[name=event-name]').attr('readonly','readonly')
+                $('.add-event-content select[name=event-kind]').attr('disabled', true)
+                $('.add-event-content input[name=event-memo]').attr('readonly','readonly')
+                $('.add-event-page').transition('fade')
+            })
         }
     })
-    $('.add-event-money input[name=event-money]').attr('readonly','readonly')
-    $('.add-event-content input[name=event-name]').attr('readonly','readonly')
-    $('.add-event-content select[name=event-kind]').attr('disabled', true)
-    $('.add-event-content input[name=event-memo]').attr('readonly','readonly')
-    $('.add-event-page').transition('fade')
-})
+}
 
 $('.remittance-page button').click(() =>{
     if($('.remittance-paid').hasClass('hidden')) {
@@ -184,7 +157,6 @@ $('.remittance-page button').click(() =>{
             user_id: userId,
             group_id: groupId
         })
-        console.log('remittance')
         $('.remittance-page button').text('開始記帳')
         $('.remittance-unpaid').transition('toggle')
         $('.remittance-paid').transition('toggle')
@@ -224,9 +196,11 @@ $('.main-buttom-banner .plus').click(() => {
 $('.add-event-page .close').click(() => {
     if ($('.split-account').hasClass('hidden')) {
         $('.add-event-page').transition('fade')
-        if (splitStatus){
+        if (splitStatus || splitMode === 'watch'){
             splitStatus = false
             splitDivider = []
+            splitMode = 'add'
+            $('.add-event-content-error-msg').html('')
             $('.add-event-money input[name=event-money]').val('')
             $('.add-event-content input[name=event-name]').val('')
             $('.add-event-content select[name=event-kind]').val('food')
@@ -235,59 +209,67 @@ $('.add-event-page .close').click(() => {
             $('.add-event-content input[name=event-name]').removeAttr('readonly')
             $('.add-event-content select[name=event-kind]').attr('disabled', false)
             $('.add-event-content input[name=event-memo]').removeAttr('readonly')
-            $('.add-event-content button').text('確定')
-            $('.add-event-content button').css('background-color','#EFA159')
+            $('.add-event-content .add-event-save').text('儲存')
+            $('.add-event-content .add-event-save').css('background-color','#EFA159')
+            $('.add-event-content .add-event-save').attr('disabled', false)
+            if ($('.add-event-content .add-event-save').hasClass('hidden')){
+                $('.add-event-content .add-event-save').transition('toggle')
+                $('.add-event-content .add-event-agreement').transition('toggle')
+            }
         }
     }else {
+        $('.split-account-error-msg').html('')
         $('.split-account').transition('fade')
     }
 })
 
 $('.add-event-content .split-people-btn').click(() => {
-    if ($('.add-event-content button').text() != '更改'){
+    if ($('.add-event-content .add-event-save').text() != '更改'){
         $('.split-account').transition('toggle')
     }
 })
 
 $('.split-account button').click(() => {
-    $.get('./api/get-group-member', {
-        group_id: groupId
-    }, (data) => {
-        let NoBlank = true
-        for (let i = 0; i < data.length; i++) {
-            if ($('.split-recored input:nth-child(3)')[i].value === '') {
-                $('.split-account-error-msg').html('請輸入每個人的分配比例！')
-                NoBlank = false
-                break
-            }
-        }
-        if (NoBlank) {
-            let temp = 0
-            for (let j = 0; j < data.length; j++) {
-                temp += parseFloat($('.split-recored input:nth-child(3)')[j].value)
-            }
-            if (temp != 100) {
-                $('.split-account-error-msg').html('每個人的比例加總需為100！')
-            }else {
-                for (let j = 0; j < data.length; j++) {
-                    splitDivider[j].value = parseFloat($('.split-recored input:nth-child(3)')[j].value)
+    if (splitMode === 'add') {
+        $.get('./api/get-group-member', {
+            group_id: groupId
+        }, (data) => {
+            let NoBlank = true
+            for (let i = 0; i < data.length; i++) {
+                if ($('.split-recored input:nth-child(3)')[i].value === '') {
+                    $('.split-account-error-msg').html('請輸入每個人的分配比例！')
+                    NoBlank = false
+                    break
                 }
-                $('.split-account-error-msg').html('')
-                $('.split-account').transition('toggle')
-                splitStatus = true
-                console.log(splitDivider)
             }
-        }
-    })
+            if (NoBlank) {
+                let temp = 0
+                for (let j = 0; j < data.length; j++) {
+                    temp += parseFloat($('.split-recored input:nth-child(3)')[j].value)
+                }
+                if (temp != 100) {
+                    $('.split-account-error-msg').html('每個人的比例加總需為100！')
+                }else {
+                    for (let j = 0; j < data.length; j++) {
+                        splitDivider[j].value = parseFloat($('.split-recored input:nth-child(3)')[j].value)
+                    }
+                    $('.split-account-error-msg').html('')
+                    $('.split-account').transition('toggle')
+                    splitStatus = true
+                }
+            }
+        })
+    }else {
+        $('.split-account').transition('toggle')
+    }
 })
 
-$('.add-event-content button').click(() => {
+$('.add-event-content .add-event-save').click(() => {
     if($('.add-event-content input[name=event-name]').val() === '' || $('.add-event-money input[name=event-money]').val() === '') {
         $('.add-event-content-error-msg').html('請填寫金額及項目名稱！')
     }else if (!splitStatus) {
         $('.add-event-content-error-msg').html('請選擇分帳人及分帳方式！')
     }else {
-        console.log(JSON.stringify(splitDivider))
         $.get('/api/new-transaction', {
             group_id: groupId,
             title: $('.add-event-content input[name=event-name]').val(),
@@ -298,16 +280,16 @@ $('.add-event-content button').click(() => {
             note: $('.add-event-content input[name=event-memo]').val(),
             picture: '',
             divider: JSON.stringify(splitDivider)
-        }, (data) => {
-            console.log(data)
         })
         $('.add-event-content-error-msg').html('')
         $('.add-event-money input[name=event-money]').attr('readonly','readonly')
         $('.add-event-content input[name=event-name]').attr('readonly','readonly')
         $('.add-event-content select[name=event-kind]').attr('disabled', true)
         $('.add-event-content input[name=event-memo]').attr('readonly','readonly')
-        $('.add-event-content button').text('更改')
-        $('.add-event-content button').css('background-color','#AE6D0C')
+        $('.add-event-content .add-event-save').text('更改')
+        $('.add-event-content .add-event-save').css('background-color','#AE6D0C')
+        $('.add-event-content .add-event-save').attr('disabled', true)
+        home_recored_refresh()
     }
 })
 
@@ -317,7 +299,7 @@ $('.main-buttom-banner .home').click(() => {
     pageNow = 'home'
     $('.main-buttom-banner .' + pageNow).css('color', '#fff3e0')
     $('.' + pageName[pageNow]).transition('toggle')
-
+    home_recored_refresh()
 })
 
 $('.main-buttom-banner .users').click(() => {
@@ -326,4 +308,33 @@ $('.main-buttom-banner .users').click(() => {
     pageNow = 'users'
     $('.main-buttom-banner .' + pageNow).css('color', '#fff3e0')
     $('.' + pageName[pageNow]).transition('toggle')
+    group_page_refresh()
 })
+
+function group_page_refresh(){
+    $.get('/api/get-group-member',{
+        group_id: groupId
+    }, (data) => {
+        $('.group-recored').html('')
+        for (let i = 0; i < data.length; i++) {
+            let tempDiv = document.createElement('div')
+            let tempPic = document.createElement('div')
+            let tempName = document.createElement('h3')
+            tempName.textContent = data[i].user_name
+            let tempCost = document.createElement('h3')
+            tempCost.textContent  = data[i].balance
+            tempDiv.appendChild(tempPic)
+            tempDiv.appendChild(tempName)
+            tempDiv.appendChild(tempCost)
+            $('.group-recored').append(tempDiv)
+        }
+        let tempDiv = document.createElement('div')
+        tempDiv.classList.add('group-invite-others')
+        let tempPic = document.createElement('div')
+        let tempName = document.createElement('h3')
+        tempName.textContent = '邀請其他朋友'
+        tempDiv.appendChild(tempPic)
+        tempDiv.appendChild(tempName)
+        $('.group-recored').append(tempDiv)
+    })
+}
