@@ -1,48 +1,18 @@
 import json
 import random
+from datetime import datetime
+import string
+
 from flask import request, abort, jsonify
+from sqlalchemy import false
 
 from flaskr import config
-from flaskr.models import User
-from flaskr.models import GroupOfUsers
-from flaskr.models import Group
-from flaskr.models import Event
-from flaskr.models import EventOfPending
-from flaskr.models import MessageOfEvent
-from flaskr.models import Event
+from flaskr.models import User, GroupOfUsers, Group, Event, EventOfPending, MessageOfEvent, Event
 from flaskr import app
-from datetime import datetime
 
 
 def isempty(x: str) -> bool:
     return (len(x) == 0 or x.isspace())
-
-
-def randon_number() -> str:
-    a = random.random()
-    a = a * (10**5)
-    a=int(a)
-    a = str(a)
-    return a
-
-
-def randon_account() -> str:
-    a = random.random()
-    a = a * (10**10)
-    a=int(a)
-    a = str(a)
-    return a
-
-
-def testdata() -> None:
-    # User.create('Jeff','123','Jeff@123')
-    #User.create('Jeff2','123','Jeff@1234')
-    # Group.create('pwd1','group_1','旅遊',100,1,'NTD')
-    # Group.create('pwd2','group_2','旅遊',100,1,'NTD')
-    #GroupOfUsers.create(1, 5, 'Jeff', 0, "account123", 0)
-    #GroupOfUsers.create(1, 6, 'Jeff', 0, 'account321', 0)
-    print('creat')
-#testdata()
 
 
 @app.route('/api/auth/login', methods=['GET'])
@@ -78,14 +48,11 @@ def get_all_group():
     data = list()
 
     if not config.API_DEMO_MODE:  # get this person all group
-        group_list = GroupOfUsers.query.filter_by(_user_id=user_id).all()
-        if group_list:
-            for row in group_list:
-                group = {'group_id': None, 'group_name': None, 'picture': None}
-                group['group_id'] = row.group_id
-                temp_group = Group.query.filter_by(_id=row.group_id).first()
-                group['group_name'] = temp_group.name
-                data.append(group)
+        for item in GroupOfUsers.query.filter_by(_user_id=user_id).all() or []:
+            group = Group.query.get(item.group_id)
+            data.append(
+                {'group_id': group._id, 'group_name': group.name, 'picture': group.picture})
+
     else:
         # 如果為空字串，或者是user_id非int，都回傳空list
         for i in range(1, 4):
@@ -97,10 +64,38 @@ def get_all_group():
     return jsonify(data)
 
 
+@app.route('/api/check-group-accessible', methods=['GET'])
+def check_group_accessible():
+    group_id = request.args.get('group_id', '')
+    verify_code = request.args.get('verify_code', '')
+
+    try:
+        group_id = int(group_id)
+    except:
+        abort(404)
+
+    if isempty(verify_code):
+        abort(404)
+
+    data = False
+
+    if not config.API_DEMO_MODE:
+        group = Group.query.get(group_id)
+        if not group:
+            abort(404)
+        else:
+            data = (verify_code == group.verification)
+    else:
+        data = True
+
+    return jsonify(data)
+
+
 @app.route('/api/creat-group', methods=['GET'])
 def creat_group():
     user_id = request.args.get('user_id', '')
     name = request.args.get('name', '')
+    nickname = request.args.get('nickname', '')
     currency = request.args.get('currency', '')
     kind = request.args.get('kind', '')
     balance = request.args.get('balance', '')
@@ -112,18 +107,17 @@ def creat_group():
     except:
         abort(404)
 
-    if isempty(name) or isempty(currency) or isempty(kind):
+    if isempty(name) or isempty(nickname) or isempty(currency) or isempty(kind):
         abort(404)
 
     data = {'group_id': None}
 
     if not config.API_DEMO_MODE:
-        verification = randon_number()
-        a = Group.create(verification, name, kind, balance, user_id, currency)
-        data['group_id'] = a._id
-        account = randon_account()
-        GroupOfUsers.create(user_id, a._id, '', balance,
-                           account, balance)  # 先假設匯款完成
+        verification = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(10))
+        account = ''.join(random.choice(string.digits) for x in range(10))
+        group = Group.create(name, kind, balance, user_id, currency, verification)
+        GroupOfUsers.create(user_id, group._id, nickname, 0, account, 0)
+        data['group_id'] = group._id
     else:
         data['group_id'] = 12345
 
@@ -134,7 +128,8 @@ def creat_group():
 def join_group():
     user_id = request.args.get('user_id', '')
     group_id = request.args.get('group_id', '')
-    password = request.args.get('password', '')
+    verify_code = request.args.get('verify_code', '')
+    nickname = request.args.get('nickname', '')
 
     try:
         group_id = int(group_id)
@@ -142,25 +137,24 @@ def join_group():
     except:
         abort(404)
 
-    if isempty(password):
+    if isempty(verify_code) or isempty(nickname):
         abort(404)
 
     data = False
 
     if not config.API_DEMO_MODE:
-        group = Group.query.filter_by(_id=group_id).first()
-        if group and group.verification == password:
-            user_group = GroupOfUsers.query.filter_by(_user_id=user_id).all()
-            exist = False
-            for row in user_group:
-                if(row.group_id == group_id):
-                    exist = True
-            if not exist:
-                GroupOfUsers.create(user_id, group_id, '',
-                                    group.payment, randon_account(), group.payment)  # 預設匯款完成
-                data = True
-            else:
+        if GroupOfUsers.query.filter_by(_group_id=group_id, user_id=user_id).first():
+            data = False
+        else:
+            group = Group.query.get(group_id)
+            if not group:
+                abort(404)
+            elif verify_code != group.verification:
                 data = False
+            else:
+                account = ''.join(random.choice(string.digits) for x in range(10))
+                GroupOfUsers.create(user_id=user_id, group_id=group_id, personal_balance=0, account=account, received=0)
+                data = True
     else:
         data = True
 
@@ -218,7 +212,7 @@ def accounting():
         abort(404)
 
     data = {'event_id': None}
-    
+
     if not config.API_DEMO_MODE:
         temp_event = Event.create(
             group_id, title, note, payer_id, datetime.now(), kind)
@@ -322,6 +316,33 @@ def group_settlement():
     return jsonify(data)
 
 
+@app.route('/api/get-user-info', methods=['GET'])
+def get_user_info():
+    user_id = request.args.get('user_id', '')
+
+    try:
+        user_id = int(user_id)
+    except:
+        abort(404)
+
+    data = {'name': '', 'email': '', 'picture': ''}
+
+    if not config.API_DEMO_MODE:
+        user = User.query.get(user_id)
+        if not user:
+            abort(404)
+        else:
+            data['name'] = user.name
+            data['email'] = user.email
+            data['picture'] = user.email
+    else:
+        data['name'] = 'User01'
+        data['email'] = 'user01@email.com'
+        data['picture'] = ''
+
+    return jsonify(data)
+
+
 @app.route('/api/set-personal-information', methods=['GET'])
 def set_personal_information():
     group_id = request.args.get('group_id', '')
@@ -346,6 +367,34 @@ def set_personal_information():
             temp_group.user_name = nickname
             data = True
 
+    else:
+        data = True
+
+    return jsonify(data)
+
+
+@app.route('/api/remittance-finished', methods=['GET'])
+def remittance_finished():
+    user_id = request.args.get('user_id', '')
+    group_id = request.args.get('group_id', '')
+
+    try:
+        user_id = int(user_id)
+        group_id = int(group_id)
+    except:
+        abort(404)
+
+    data = False
+
+    if not config.API_DEMO_MODE:
+        group = Group.query.get(group_id)
+        group_user = GroupOfUsers.query.filter_by(_user_id=user_id, _group_id=group_id)
+        if (not group) and (not group_user) and (group.payment > group_user.received):
+            group_user.personal_balance = group_user.personal_balance + (group.payment - group_user.received)
+            group_user.received = group.payment
+            data = True
+        else:
+            data = False
     else:
         data = True
 
@@ -482,8 +531,7 @@ def get_personnal_event():
         pass
     else:
         for i in range(amount):
-            event = {'event_id': None, 'name': None,
-                     'total_money': None, 'state': None, 'date': None}
+            event = {'event_id': None, 'name': None, 'total_money': None, 'state': None, 'date': None}
             event['event_id'] = 54321 + i
             event['title'] = 'Event {}'.format(str(i + 5))
             event['total_money'] = 5874 + 37 * i

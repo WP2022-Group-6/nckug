@@ -246,34 +246,25 @@ class Group(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
-    _verification = db.Column(db.String, nullable=False, unique=False)
     _name = db.Column(db.String, nullable=False, unique=False)
     _type = db.Column(db.String, nullable=False, unique=False)
     _payment = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
+    _verification = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, verification, name, type, payment, owner_id, currency, picture) -> None:
-        self._verification = verification
+    def __init__(self, name, type, payment, owner_id, currency, verification, picture) -> None:
         self._name = name
         self._type = type
         self._payment = payment
         self._owner_id = owner_id
         self._currency = currency
+        self._verification = verification
         self._picture = picture
 
     def __repr__(self) -> str:
         return '<Group {}>'.format(self._name)
-
-    @property
-    def verification(self) -> str:
-        return self._verification
-
-    @verification.setter
-    def verification(self, value) -> None:
-        self._verification = value
-        DatabaseManager.update()
 
     @property
     def name(self) -> str:
@@ -321,6 +312,15 @@ class Group(db.Model):
         DatabaseManager.update()
 
     @property
+    def verification(self) -> str:
+        return self._verification
+
+    @verification.setter
+    def verification(self, value) -> None:
+        self._verification = value
+        DatabaseManager.update()
+
+    @property
     def picture(self) -> str:
         return self._picture
 
@@ -333,9 +333,8 @@ class Group(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, verification, name, type, payment, owner_id, currency, picture=None) -> Group:
-        group = cls(verification, name, type, payment,
-                    owner_id, currency, picture)
+    def create(cls, name, type, payment, owner_id, currency, verification, picture=None) -> Group:
+        group = cls(name, type, payment, owner_id, currency, verification, picture)
         DatabaseManager.create(group)
         return group
 
