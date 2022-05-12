@@ -7,7 +7,7 @@ database/
 !**/.vscode/settings.json
 
 # Parcel
-.cache/
+.parcel-cache/
 dist/
 
 # Dependency directories
