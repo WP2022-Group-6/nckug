@@ -52,6 +52,10 @@ class User(db.Model, UserMixin):
         return '<User {} {}>'.format(self._name, self._email)
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def name(self) -> str:
         return self._name
 
@@ -118,6 +122,10 @@ class GroupOfUsers(db.Model):
 
     def __repr__(self) -> str:
         return '<GroupOfUsers {} {}>'.format(self._user_id, self._group_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def user_id(self) -> int:
@@ -200,6 +208,10 @@ class UsersWithoutVerify(db.Model):
         return '<UsersWithoutVerify {}>'.format(self._email)
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def email(self) -> str:
         return self._email
 
@@ -263,6 +275,10 @@ class Group(db.Model):
 
     def __repr__(self) -> str:
         return '<Group {}>'.format(self._name)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def name(self) -> str:
@@ -362,6 +378,10 @@ class Event(db.Model):
 
     def __repr__(self) -> str:
         return '<Event {}>'.format(self._description)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def group_id(self) -> int:
@@ -464,6 +484,10 @@ class EventOfPending(db.Model):
         return '<EventOfPending {} {}>'.format(self._event_id, self._user_id)
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def event_id(self) -> int:
         return self._event_id
 
@@ -524,6 +548,10 @@ class MessageOfEvent(db.Model):
 
     def __repr__(self) -> str:
         return '<MessageOfEvent {} {}>'.format(self._event_id, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def event_id(self) -> int:
