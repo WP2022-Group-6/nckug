@@ -604,13 +604,16 @@ def get_group_member():
 
     if not config.API_DEMO_MODE:
         for member in (GroupOfUsers.query.filter_by(_group_id=group_id).all() or []):
-            data.append({'user_name': member.user_name, 'balance': member.personal_balance})
+            data.append({'user_id': member.user_id, 'user_name': member.user_name,
+                        'balance': member.personal_balance, "picture": ""})
 
     else:
         for i in range(1, 4):
-            member = {'user_name': None, 'balance': None}
+            member = {'user_id': None, 'user_name': None, 'balance': None, "picture": None}
+            member['user_id'] = i
             member['user_name'] = 'User {}'.format(str(i))
             member['balance'] = 657 + 32 * i
+            member['picture'] = ''
             data.append(member)
 
     return jsonify(data)
