@@ -92,10 +92,10 @@ def check_group_accessible():
 @app.route('/api/creat-group', methods=['GET'])
 def creat_group():
     user_id = request.args.get('user_id', '')
-    name = request.args.get('name', '')
+    group_name = request.args.get('group_name', '')
     nickname = request.args.get('nickname', '')
     currency = request.args.get('currency', '')
-    kind = request.args.get('kind', '')
+    group_type = request.args.get('type', '')
     balance = request.args.get('balance', '')
     picture = request.args.get('picture', '')
 
@@ -105,7 +105,7 @@ def creat_group():
     except:
         abort(404)
 
-    if isempty(name) or isempty(nickname) or isempty(currency) or isempty(kind):
+    if isempty(group_name) or isempty(nickname) or isempty(currency) or isempty(group_type):
         abort(404)
 
     data = {'group_id': None}
@@ -113,7 +113,7 @@ def creat_group():
     if not config.API_DEMO_MODE:
         verification = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(10))
         account = ''.join(random.choice(string.digits) for x in range(10))
-        group = Group.create(name, kind, balance, user_id, currency, verification)
+        group = Group.create(group_name, group_type, balance, user_id, currency, verification)
         GroupOfUsers.create(user_id, group._id, nickname, 0, account, 0)
         data['group_id'] = group._id
     else:
