@@ -556,7 +556,7 @@ def get_group_near_event():
     except:
         abort(404)
 
-    data = {'total': 0, 'day-list': list()}
+    data = {'last_day_total': 0, 'day-list': list()}
 
     if not config.API_DEMO_MODE:
         for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
@@ -571,10 +571,10 @@ def get_group_near_event():
                 day_info['transactions'].append(event_info)
                 day_info['total'] += event_info['total_money']
             data['day-list'].append(day_info)
-            data['total'] += day_info['total']
+        data['last_day_total'] = data['day-list'][0]['total']
 
     else:
-        data['total'] = 11000
+        data['last_day_total'] = 6000
         data['day-list'].append({
             'date': '2022-03-09',
             'total': 6000,
