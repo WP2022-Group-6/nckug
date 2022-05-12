@@ -47,10 +47,9 @@ def get_all_group():
     data = list()
 
     if not config.API_DEMO_MODE:  # get this person all group
-        for item in GroupOfUsers.query.filter_by(_user_id=user_id).all() or []:
+        for item in (GroupOfUsers.query.filter_by(_user_id=user_id).all() or []):
             group = Group.query.get(item.group_id)
-            data.append(
-                {'group_id': group._id, 'group_name': group.name, 'picture': group.picture})
+            data.append({'group_id': group._id, 'group_name': group.name, 'picture': group.picture})
 
     else:
         # 如果為空字串，或者是user_id非int，都回傳空list
@@ -169,8 +168,7 @@ def get_one_group_information():
     except:
         abort(404)
 
-    data = {'group_name': None, 'password': None,
-            'link': None, 'picture': None}
+    data = {'group_name': None, 'password': None, 'link': None, 'picture': None}
 
     if not config.API_DEMO_MODE:
         group = Group.query.filter_by(_id=group_id).first()
@@ -286,8 +284,7 @@ def dialoge():
     data = False
 
     if not config.API_DEMO_MODE:
-        temp = EventOfPending.query.filter_by(
-            _event_id=event_id, _user_id=user_id).first()
+        temp = EventOfPending.query.filter_by(_event_id=event_id, _user_id=user_id).first()
         if message.get('type') == 'agree':
             temp.agree = True
             data = True
@@ -315,7 +312,8 @@ def group_settlement():
     data = list()
 
     if not config.API_DEMO_MODE:
-        pass
+        for item in (GroupOfUsers.query.filter_by(_group_id=group_id).all() or []):
+            data.append({'user_name': item.user_name, 'balance': item.personal_balance})
     else:
         for i in range(1, 4):
             member = {'user_name': None, 'balance': None}
@@ -371,8 +369,7 @@ def set_personal_information():
     data = False
 
     if not config.API_DEMO_MODE:
-        temp_group = GroupOfUsers.query.filter_by(
-            _group_id=group_id, _user_id=user_id).first()
+        temp_group = GroupOfUsers.query.filter_by(_group_id=group_id, _user_id=user_id).first()
         if temp_group:
             temp_group.user_name = nickname
             data = True
@@ -398,7 +395,7 @@ def remittance_finished():
 
     if not config.API_DEMO_MODE:
         group = Group.query.get(group_id)
-        group_user = GroupOfUsers.query.filter_by(_user_id=user_id, _group_id=group_id)
+        group_user = GroupOfUsers.query.filter_by(_user_id=user_id, _group_id=group_id).first()
         if (not group) and (not group_user) and (group.payment > group_user.received):
             group_user.personal_balance = group_user.personal_balance + (group.payment - group_user.received)
             group_user.received = group.payment
@@ -422,8 +419,7 @@ def get_personal_money_information():
     except:
         abort(404)
 
-    data = {'current_balance': None, 'need_money': None,
-            'account': None, 'currency': None}
+    data = {'current_balance': None, 'need_money': None, 'account': None, 'currency': None}
 
     if not config.API_DEMO_MODE:
         group = Group.query.get(group_id)

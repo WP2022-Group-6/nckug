@@ -178,8 +178,7 @@ class GroupOfUsers(db.Model):
 
     @classmethod
     def create(cls, user_id, group_id, user_name, personal_balance, account, received) -> GroupOfUsers:
-        groupofusers = cls(user_id, group_id, user_name,
-                           personal_balance, account, received)
+        groupofusers = cls(user_id, group_id, user_name, personal_balance, account, received)
         DatabaseManager.create(groupofusers)
         return groupofusers
 
@@ -233,8 +232,7 @@ class UsersWithoutVerify(db.Model):
     @classmethod
     def create(cls, email, verification, create_time) -> UsersWithoutVerify:
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
-            raise ValueError(
-                'This email already exists in the UsersWithoutVerify table.')
+            raise ValueError('This email already exists in the UsersWithoutVerify table.')
         if cls.query.filter(func.lower(User._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the User table.')
         userswithoutverify = cls(email, verification, create_time)
