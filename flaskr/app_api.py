@@ -222,19 +222,20 @@ def new_transaction():
 
     if not config.API_DEMO_MODE:
         event = Event.create(group_id=group_id, amount=amount, description=title, note=note,
-                             payer_id=payer_id, datetime=datetime.now(), type=transaction_type)
+                             payer_id=payer_id, split_method=split_method, datetime=datetime.now(),
+                             type=transaction_type)
         member_expense_sum = 0
         if split_method == 'average':
             personal_expenses = int(amount / len(divider))
             for person in divider:
                 EventOfPending.create(event_id=event._id, user_id=person['user_id'],
-                                      personal_expenses=personal_expenses, agree=False)
+                                      personal_expenses=personal_expenses, input_value=0, agree=False)
                 member_expense_sum += personal_expenses
         elif split_method == 'percentage':
             for person in divider:
                 personal_expenses = amount * (person['value'] * 0.01)
                 EventOfPending.create(event_id=event._id, user_id=person['user_id'],
-                                      personal_expenses=personal_expenses, agree=False)
+                                      personal_expenses=personal_expenses, input_value=person['value'], agree=False)
                 member_expense_sum += personal_expenses
         elif split_method == 'extra':
             common_amount = amount - sum([person['value'] for person in divider])
@@ -242,25 +243,69 @@ def new_transaction():
             for person in divider:
                 personal_expenses = personal_common_expense + person['value']
                 EventOfPending.create(event_id=event._id, user_id=person['user_id'],
-                                      personal_expenses=personal_expenses, agree=False)
+                                      personal_expenses=personal_expenses, input_value=person['value'], agree=False)
                 member_expense_sum += personal_expenses
         elif split_method == 'normal':
             for person in divider:
                 EventOfPending.create(event_id=event._id, user_id=person['user_id'],
-                                      personal_expenses=person['value'], agree=False)
+                                      personal_expenses=person['value'], input_value=person['value'], agree=False)
                 member_expense_sum += person['value']
         elif split_method == 'number_of':
             total = sum([person['value'] for person in divider])
             for person in divider:
                 personal_expenses = int(amount / total)
                 EventOfPending.create(event_id=event._id, user_id=person['user_id'],
-                                      personal_expenses=personal_expenses, agree=False)
+                                      personal_expenses=personal_expenses, input_value=person['value'], agree=False)
                 member_expense_sum += personal_expenses
         event.amount = member_expense_sum
         data['event_id'] = event._id
 
     else:
         data['event_id'] = 54321
+
+    return jsonify(data)
+
+
+@app.route('/api/get-transaction-info', methods=['GET'])
+def get_transaction():
+    event_id = request.args.get('event_id', '')
+
+    try:
+        event_id = int(event_id)
+    except:
+        abort(404)
+
+    data = {"title": "", "amount": 0, "type": "", "state": False, "date": "", "split_method": "",
+            "payer_id": 0, "payer_name": "", "note": "", "picture": "", "divider": []}
+
+    if not config.API_DEMO_MODE:
+        event = Event.query.get(event_id)
+        if not event:
+            abort(404)
+        data = {"title": event.description, "amount": event.amount, "type": event.type, "state": True,
+                "date": event.datetime.date().isoformat(), "split_method": event.split_method,
+                "payer_id": event.payer_id, "payer_name": "", "note": event.note, "picture": event.picture,
+                "divider": []}
+        for member in (GroupOfUsers.query.filter_by(_group_id=event.group_id).all() or []):
+            user = User.query.get(member.user_id)
+            member_event = EventOfPending.query.filter_by(_event_id=event.id, _user_id=user.id).first()
+            if member.id == event.payer_id:
+                data['payer_name'] = member.user_name
+            if not member_event.agree:
+                data['state'] = False
+            data['divider'].append({'user_id': user.id, 'nickname': member.user_name,
+                                    'amount': member_event.personal_expenses, "input_value": member_event.input_value,
+                                    'picture': user.picture})
+
+    else:
+        data = {
+            "title": "Transaction01", "amount": 2000, "type": "Type01", "state": True, "date": "2022-04-01",
+            "split_method": "percentage", "payer_id": 1, "payer_name": "User01", "note": "", "picture": "",
+            "divider": [
+                {"user_id": 1, "nickname": "User01", "amount": 1500, "input_value": 75, "picture": ""},
+                {"user_id": 2, "nickname": "User02", "amount": 500, "input_value": 25, "picture": ""},
+            ]
+        }
 
     return jsonify(data)
 

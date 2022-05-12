@@ -362,16 +362,18 @@ class Event(db.Model):
     _description = db.Column(db.Text, nullable=False, unique=False)
     _note = db.Column(db.Text, nullable=False, unique=False)
     _payer_id = db.Column(db.Integer, nullable=False, unique=False)
+    _split_method = db.Column(db.String, nullable=False, unique=False)
     _datatime = db.Column(db.DateTime, nullable=False, unique=False)
     _type = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, group_id, amount, description, note, payer_id, datatime, type, picture) -> None:
+    def __init__(self, group_id, amount, description, note, payer_id, split_method, datatime, type, picture) -> None:
         self._group_id = group_id
         self._amount = amount
         self._description = description
         self._note = note
         self._payer_id = payer_id
+        self._split_method = split_method
         self._datatime = datatime
         self._type = type
         self._picture = picture
@@ -429,6 +431,15 @@ class Event(db.Model):
         DatabaseManager.update()
 
     @property
+    def split_method(self) -> str:
+        return self._split_method
+
+    @split_method.setter
+    def split_method(self, value) -> str:
+        self._split_method = value
+        DatabaseManager.update()
+
+    @property
     def datatime(self) -> datetime:
         return self._datatime
 
@@ -459,8 +470,8 @@ class Event(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, amount, description, note, payer_id, datatime, type, picture=None) -> Event:
-        event = cls(group_id, amount, description, note, payer_id, datatime, type, picture)
+    def create(cls, group_id, amount, description, note, payer_id, split_method, datatime, type, picture=None) -> Event:
+        event = cls(group_id, amount, description, note, payer_id, split_method, datatime, type, picture)
         DatabaseManager.create(event)
         return event
 
@@ -472,12 +483,14 @@ class EventOfPending(db.Model):
     _event_id = db.Column(db.Integer, nullable=False, unique=False)
     _user_id = db.Column(db.Integer, nullable=False, unique=False)
     _personal_expenses = db.Column(db.Integer, nullable=False, unique=False)
+    _input_value = db.Column(db.Integer, nullable=False, unique=False)
     _agree = db.Column(db.Boolean, nullable=False, unique=False)
 
-    def __init__(self, event_id, user_id, personal_expenses, agree) -> None:
+    def __init__(self, event_id, user_id, personal_expenses, input_value, agree) -> None:
         self._event_id = event_id
         self._user_id = user_id
         self._personal_expenses = personal_expenses
+        self._input_value = input_value
         self._agree = agree
 
     def __repr__(self) -> str:
@@ -515,6 +528,15 @@ class EventOfPending(db.Model):
         DatabaseManager.update()
 
     @property
+    def input_value(self) -> int:
+        return self._input_value
+
+    @input_value.setter
+    def input_value(self, value) -> None:
+        self._input_value = value
+        DatabaseManager.update()
+
+    @property
     def agree(self) -> bool:
         return self._agree
 
@@ -527,8 +549,8 @@ class EventOfPending(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, event_id, user_id, personal_expenses, agree) -> EventOfPending:
-        eventofpending = cls(event_id, user_id, personal_expenses, agree)
+    def create(cls, event_id, user_id, personal_expenses, input_value, agree) -> EventOfPending:
+        eventofpending = cls(event_id, user_id, personal_expenses, input_value, agree)
         DatabaseManager.create(eventofpending)
         return eventofpending
 
