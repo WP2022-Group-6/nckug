@@ -1,12 +1,48 @@
 import json
+import random
 from flask import request, abort, jsonify
 
 from flaskr import config
+from flaskr.models import User
+from flaskr.models import GroupOfUsers
+from flaskr.models import Group
+from flaskr.models import Event
+from flaskr.models import EventOfPending
+from flaskr.models import MessageOfEvent
+from flaskr.models import Event
 from flaskr import app
+from datetime import datetime
 
 
 def isempty(x: str) -> bool:
     return (len(x) == 0 or x.isspace())
+
+
+def randon_number() -> str:
+    a = random.random()
+    a = a * (10**5)
+    a=int(a)
+    a = str(a)
+    return a
+
+
+def randon_account() -> str:
+    a = random.random()
+    a = a * (10**10)
+    a=int(a)
+    a = str(a)
+    return a
+
+
+def testdata() -> None:
+    # User.create('Jeff','123','Jeff@123')
+    #User.create('Jeff2','123','Jeff@1234')
+    # Group.create('pwd1','group_1','旅遊',100,1,'NTD')
+    # Group.create('pwd2','group_2','旅遊',100,1,'NTD')
+    #GroupOfUsers.create(1, 5, 'Jeff', 0, "account123", 0)
+    #GroupOfUsers.create(1, 6, 'Jeff', 0, 'account321', 0)
+    print('creat')
+#testdata()
 
 
 @app.route('/api/auth/login', methods=['GET'])
@@ -20,7 +56,10 @@ def login():
     data = {'user_id': None}
 
     if not config.API_DEMO_MODE:    # check password
-        pass
+        user = User.query.filter_by(_email=email).first()
+        if user and user.check_password(password):
+            data['user_id'] = user._id
+
     else:  # 可不做任何檢查，因為只要用收到的"字串"與database中的"字串"比對，不一樣就回傳None即可
         data['user_id'] = 12345
 
@@ -39,7 +78,14 @@ def get_all_group():
     data = list()
 
     if not config.API_DEMO_MODE:  # get this person all group
-        pass
+        group_list = GroupOfUsers.query.filter_by(_user_id=user_id).all()
+        if group_list:
+            for row in group_list:
+                group = {'group_id': None, 'group_name': None, 'picture': None}
+                group['group_id'] = row.group_id
+                temp_group = Group.query.filter_by(_id=row.group_id).first()
+                group['group_name'] = temp_group.name
+                data.append(group)
     else:
         # 如果為空字串，或者是user_id非int，都回傳空list
         for i in range(1, 4):
@@ -72,7 +118,12 @@ def creat_group():
     data = {'group_id': None}
 
     if not config.API_DEMO_MODE:
-        pass
+        verification = randon_number()
+        a = Group.create(verification, name, kind, balance, user_id, currency)
+        data['group_id'] = a._id
+        account = randon_account()
+        GroupOfUsers.create(user_id, a._id, '', balance,
+                           account, balance)  # 先假設匯款完成
     else:
         data['group_id'] = 12345
 
@@ -97,7 +148,19 @@ def join_group():
     data = False
 
     if not config.API_DEMO_MODE:
-        pass
+        group = Group.query.filter_by(_id=group_id).first()
+        if group and group.verification == password:
+            user_group = GroupOfUsers.query.filter_by(_user_id=user_id).all()
+            exist = False
+            for row in user_group:
+                if(row.group_id == group_id):
+                    exist = True
+            if not exist:
+                GroupOfUsers.create(user_id, group_id, '',
+                                    group.payment, randon_account(), group.payment)  # 預設匯款完成
+                data = True
+            else:
+                data = False
     else:
         data = True
 
@@ -117,7 +180,12 @@ def get_one_group_information():
             'link': None, 'picture': None}
 
     if not config.API_DEMO_MODE:
-        pass
+        group = Group.query.filter_by(_id=group_id).first()
+        if group:
+            data['group_name'] = group.name
+            data['password'] = group.verification
+            data['link'] = None
+            data['picture'] = None
     else:
         data['group_name'] = 'Group 1'
         data['password'] = 'abc123'
@@ -146,13 +214,49 @@ def accounting():
     except:
         abort(404)
 
-    if isempty(title) or isempty(kind) or type(divider) != list or len(divider) == 0:
+    if isempty(title) or isempty(kind) or type(divider) != dict or len(divider) == 0:
         abort(404)
 
     data = {'event_id': None}
-
+    
     if not config.API_DEMO_MODE:
-        pass
+        temp_event = Event.create(
+            group_id, title, note, payer_id, datetime.now(), kind)
+        divider_list = divider.get('divider')
+        if (divider.get('type') == 'average'):
+            money = total_money / len(divider_list)
+            for i in divider_list:
+                EventOfPending.create(
+                    temp_event._id, i.get('user_id'), money, False)
+            data = {'event_id': temp_event._id}
+        elif divider.get('type') == 'percentage':
+            for i in divider_list:
+                money = total_money * i.get('value') / 100
+                EventOfPending.create(
+                    temp_event._id, i.get('user_id'), money, False)
+            data = {'event_id': temp_event._id}
+        elif divider.get('type') == 'extra':
+            extra_money = 0
+            for i in divider_list:
+                extra_money += i.get('value')
+            for i in divider_list:
+                money = (total_money - extra_money) / len(divider_list)
+                EventOfPending.create(
+                    temp_event._id, i.get('user_id'), money + i.get('value'), False)
+            data = {'event_id': temp_event._id}
+        elif divider.get('type') == 'pratical':
+            for i in divider_list:
+                EventOfPending.create(
+                    temp_event._id, i.get('user_id'), i.get('value'), False)
+            data = {'event_id': temp_event._id}
+        elif divider.get('type') == 'number_of':
+            number_of = 0
+            for i in divider_list:
+                number_of += i.get('value')
+            for i in divider_list:
+                EventOfPending.create(
+                    temp_event._id, i.get('user_id'), total_money * i.get('value') / number_of, False)
+            data = {'event_id': temp_event._id}
     else:
         data['event_id'] = 54321
 
@@ -178,7 +282,17 @@ def dialoge():
     data = False
 
     if not config.API_DEMO_MODE:
-        pass
+        temp = EventOfPending.query.filter_by(
+            _event_id=event_id, _user_id=user_id).first()
+        if message.get('type') == 'agree':
+            temp.agree = True
+            data = True
+        elif message.get('type') == 'disagree':
+            temp.agree = False
+            data = True
+        elif not isempty(message.get('content')):
+            MessageOfEvent.create(event_id, user_id, message.get('content'))
+            data = True
     else:
         data = True
 
@@ -226,7 +340,12 @@ def set_personal_information():
     data = False
 
     if not config.API_DEMO_MODE:
-        pass
+        temp_group = GroupOfUsers.query.filter_by(
+            _group_id=group_id, _user_id=user_id).first()
+        if temp_group:
+            temp_group.user_name = nickname
+            data = True
+
     else:
         data = True
 
