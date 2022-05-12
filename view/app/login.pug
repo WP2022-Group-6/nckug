@@ -7,7 +7,7 @@ html
 
     // Third Party CSS
     link(href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet" type="text/css")
-    
+
     // Customized CSS
     link(href="./login.sass" rel="stylesheet")
   body
@@ -23,11 +23,12 @@ html
       h1 登入
       div
         h2 帳號
-        input(type="text" placeholder="電子郵件")
+        input(type="text" placeholder="電子郵件" name='email')
       div
         h2 密碼
-        input(type="text" placeholder="密碼")
-      button.entrance-btn 登入
+        input(type="text" placeholder="密碼" name='pwd')
+      .login-error-msg
+      button.login-btn 登入
 
     // 選擇群組畫面
     section.choose-group-page.transition.hidden
@@ -41,10 +42,10 @@ html
         div
         i.big.grey.angle.left.icon
         i.big.grey.angle.right.icon
-      button.group-enter 進入群組
-      button 創立群組
-      button 加入現有群組
-  
+      button.choose-group-enter 進入群組
+      button.choose-group-create 創立群組
+      button.choose-group-join 加入現有群組
+
     // 創立群組頁面
     section.create-group-page.transition.hidden
       i.big.grey.arrow.left.icon
@@ -56,17 +57,25 @@ html
       .create-container
         div
           h2 名稱
-          input(type="text")
+          input(type="text" name='group-name')
         .create-two-input
           div
             h2 幣別
-            input(type="text")
+            select(name='group-currency')
+              option(value='TWD') 台幣TWD
+              option(value='USD') 美元USD
+              option(value='JPY') 日幣JPY
           div
             h2 類型
-            input(type="text")
+            select(name='group-kind')
+              option(value='travel') 旅遊
+              option(value='life') 生活
+              option(value='club') 社團
+              option(value='other') 其他
         div
           h2 餘額通知
-          input(type="text")
+          input(type="number" name='group-balance')
+      .create-group-error-msg
       button 下一步
 
     // 加入群組頁面
@@ -76,10 +85,11 @@ html
       .join-container
         div
           h2 群組ID
-          input(type="text")
+          input(type="number" name='group-id')
         div
           h2 群組密碼
-          input(type="text")
+          input(type="text" name='group-pwd')
+      .join-group-error-msg
       button 下一步
 
     //我是誰頁面(for both create and join)
@@ -87,10 +97,11 @@ html
       i.big.grey.arrow.left.icon
       h1 我是誰??
       .who-am-i-pic
-        i.user.circle.outline.icons
+        i.huge.grey.user.circle.outline.icon
       .who-am-i-container
         h2 暱稱
-        input(type="text")
+        input(type="text" name='nickname' placeholder='使用者名稱')
+      .who-am-i-error-msg
       button 創立群組
 
 
@@ -98,4 +109,4 @@ html
     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js")
     script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js")
-    //script(src="login.js")
+    script(src="login.js")

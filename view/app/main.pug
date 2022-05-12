@@ -7,7 +7,7 @@ html
 
     // Third Party CSS
     link(href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet" type="text/css")
-    
+
     // Customized CSS
     link(href="./main.sass" rel="stylesheet")
   body
@@ -18,13 +18,16 @@ html
         .main-top-text
           i.big.align.justify.icon
           p 群組名稱
-          h2 總金額
+          h2 總餘額
           h1 17036
           h3 NTD
-    
+
     section.home-page
       h3 每日花費
-      p 今日 1392 NTD
+      .home-today-cost
+        p 今日
+        p 1392
+        p NTD
       .hone-barchart-div
         canvas#barChart
       h3 近期紀錄
@@ -34,7 +37,7 @@ html
             h3 名稱
             h3 金額
             i.big.check.circle.outline.icon
-      
+
     section.group-page.transition.hidden
       h3 每人餘額
       .group-recored
@@ -55,14 +58,14 @@ html
       i.big.plus.icon
       i.big.chart.bar.icon
       i.big.users.icon
-    
+
     section.remittance-page.transition.hidden
       h1 匯款
       .remittance-group
         i.huge.icons
           i.image.icon
-          i.top.right.corner.add.icon
-      p 群組名稱
+          i.grey.top.right.corner.add.icon
+      p.remittance-group-name 群組名稱
       section.remittance-unpaid
         h2 目前餘額：
         h2 仍須匯款：
@@ -74,33 +77,40 @@ html
         i.huge.check.icon
         h2 已匯款
       button 複製帳號
-    
-    section.add-event-page
+
+    section.add-event-page.transition.hidden
       i.large.close.icon
       .add-event-money
         h1 金額
         div
-          input(type="text")
+          input(type="number" name='event-money')
       .add-event-image
         i.big.image.icon
       section.add-event-content
         h2 支出項目
-        input(type="text")
+        input(type="text" name='event-name')
         h2 類型
-        input(type="text")
+        select(name='event-kind')
+          option(value='food') 食物
+          option(value='shopping') 購物
+          option(value='ent') 娛樂
+          option(value='other') 其他
         h2 備註
-        input(type="text")
+        input(type="text" name='event-memo')
         h2 付款人
         div
-          div
+          .paid-people
+            div
           i.big.caret.down.icon
         h2 分帳人
         div
-          div
-          div
-          i.big.caret.down.icon
+          .split-people
+            div
+            div
+          i.big.caret.down.icon.split-people-btn
+        .add-event-content-error-msg
         button 儲存
-      
+
       section.split-account.transition.hidden
         .split-account-navbar
           i.large.percent.icon.split-way
@@ -120,10 +130,11 @@ html
               div
                 div
                 h3 名稱
-                input(placeholder="平分金額")
+                input(type="number" placeholder="輸入 %數")
+        .split-account-error-msg
         button 確定
 
-      section.denial-reason-page
+      section.denial-reason-page.transition.hidden
         h2 支出項目
         input(type="text")
         h1 不同意

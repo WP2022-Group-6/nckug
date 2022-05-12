@@ -1,5 +1,8 @@
 @import 'foundation'
-    
+
+select:focus
+    outline: none
+
 body
     width: 100vw
     background-color: #FFF3E0
@@ -87,6 +90,9 @@ body
         border-radius: 50%
         background-color: #AE6D0C
 
+.main-buttom-banner .home
+    color: #fff3e0
+
 /***************************************/
 /*     03. Section remittance-page     */
 /***************************************/
@@ -166,7 +172,7 @@ body
 .home-page
     padding: 1vh 8vw
     color: #808080
-    h3 
+    h3
         margin: 1vh 0
     p
         margin: 0
@@ -177,6 +183,12 @@ body
     margin: 0 auto 2vh auto
     width: 84vw
     height: 15vh
+
+.home-today-cost
+    display: inline-flex
+    justify-content: flex-end
+    column-gap: 1vw
+    width: 100%
 
 .home-recored
     @include flex-center($dir: column)
@@ -299,7 +311,7 @@ body
     margin-left: auto
     i
         margin: 1.5vw
-        
+
 
 /*******************************************/
 /*     06-1. Section add-event-content     */
@@ -308,22 +320,20 @@ body
     padding: 1vh 10vw
     h2
         margin: 0.2em 0
-    input
+    input, select
         @extend %input-style
         background-color: #F6BF6A
         height: 5vh
         width: 100%
+        font-size: 1.2em
+        outline-color: #AE6D0C
     button
         @extend %btn-style
         align-self: center
-        margin: auto
+        margin: 0 0 5vh 0
     div
         display: inline-flex
         align-items: center
-        column-gap: 2vw
-        div
-            @include circle($radi: 17vw)
-            background-color: #EFA159
         i
             @include flex-center
             margin-left: auto
@@ -331,7 +341,20 @@ body
             background-color: #F6BF6A
             width: 7vw
             height: 8vw
-            
+
+.paid-people, .split-people
+    display: inline-flex
+    align-items: center
+    column-gap: 2vw
+    div
+        @include circle($radi: 17vw)
+        background-color: #EFA159
+
+.add-event-content-error-msg
+    align-self: center
+    color: red
+    margin-top: auto
+
 /***************************************/
 /*     06-2. Section split-account     */
 /***************************************/
@@ -349,7 +372,7 @@ body
         background-color: #B5A24C
     :nth-child(1)
         border: 1.5vw solid #AE6D0C
-        
+
 .split-way
     @include flex-center
     display: flex !important
@@ -361,7 +384,7 @@ body
     i
         border: 0 !important
         background-color: transparent !important
-        
+
 .split-account-content
     padding: 1vh 10vw
 
@@ -381,6 +404,10 @@ body
         height: 100%
         h3
             margin-left: 1vw
+
+.split-account-error-msg
+    align-self: center
+    color: red
 
 /********************************************/
 /*     06-3. Section denial-reason-page     */
