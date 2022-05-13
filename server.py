@@ -1,5 +1,5 @@
 from flaskr import app
-from flaskr import app_example, app_api
+from flaskr import app_api
 from flaskr.models import db
 
 
