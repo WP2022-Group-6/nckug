@@ -2,14 +2,20 @@
 database/
 
 # VSCode
-.vscode/
+**/.vscode/*
+!**/.vscode/extensions.json
+!**/.vscode/settings.json
 
 # Parcel
-.cache/
+.parcel-cache/
 dist/
 
 # Dependency directories
 node_modules/
+
+# Python
+**/__pycache__/
+config.py
 
 # Yarn
 yarn.lock

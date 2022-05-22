@@ -1,0 +1,39 @@
+@mixin jump-page($bg-color: #f6bf6a, $h: 60vh)
+    display: flex
+    flex-direction: column
+    align-items: center
+    position: fixed
+    bottom: 0
+    width: 100vw
+    border-radius: 40px 40px 0 0
+    height: $h
+    background-color: $bg-color
+
+@mixin flex-center($dir: row)
+    display: flex
+    justify-content: center
+    align-items: center
+    flex-direction: $dir
+
+@mixin circle($radi: 35vw)
+    width: $radi
+    height: $radi
+    border-radius: 50%
+    overflow: hidden
+
+%btn-style
+    width: 40vw
+    height: 14vw
+    border-radius: 15px
+    background-color: #EFA159
+    border: 0
+    color: white
+    font-size: large
+    font-weight: 600
+    box-shadow: 0 0.2em 0.2em #00000059
+
+%input-style
+    border-radius: 15px
+    border: 0
+    padding-left: 1rem
+    background-color: #FFF3E0
