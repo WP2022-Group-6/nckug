@@ -1,4 +1,6 @@
 from __future__ import annotations
+import random
+import string
 
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,6 +8,17 @@ from flask_login import UserMixin
 
 from flaskr import db
 from datetime import datetime
+
+
+def gen_random_text(length: int, digit: bool, letter: bool) -> str:
+    if digit and letter:
+        return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
+    elif digit:
+        return ''.join(random.choice(string.digits) for x in range(length))
+    elif letter:
+        return ''.join(random.choice(string.ascii_letters) for x in range(length))
+    else:
+        return ''
 
 
 class DatabaseManager():
@@ -44,12 +57,16 @@ class User(db.Model, UserMixin):
 
     def __init__(self, name, password, email, picture) -> None:
         self._name = name
-        self._password_hash = generate_password_hash(password)
+        self._password_hash = password
         self._email = email
         self._picture = picture
 
     def __repr__(self) -> str:
         return '<User {} {}>'.format(self._name, self._email)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def name(self) -> str:
@@ -61,11 +78,11 @@ class User(db.Model, UserMixin):
         DatabaseManager.update()
 
     def set_password(self, password: str):
-        self._password_hash = generate_password_hash(password)
+        self._password_hash = password
         DatabaseManager.update()
 
     def check_password(self, password) -> bool:
-        return check_password_hash(self._password_hash, password)
+        return self._password_hash == password
 
     @property
     def email(self) -> str:
@@ -118,6 +135,10 @@ class GroupOfUsers(db.Model):
 
     def __repr__(self) -> str:
         return '<GroupOfUsers {} {}>'.format(self._user_id, self._group_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def user_id(self) -> int:
@@ -201,6 +222,10 @@ class UsersWithoutVerify(db.Model):
         return '<UsersWithoutVerify {}>'.format(self._email)
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def email(self) -> str:
         return self._email
 
@@ -235,7 +260,7 @@ class UsersWithoutVerify(db.Model):
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
             raise ValueError(
                 'This email already exists in the UsersWithoutVerify table.')
-        if cls.query.filter(func.lower(User._email) == func.lower(email)).first() is not None:
+        if User.query.filter(func.lower(User._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the User table.')
         userswithoutverify = cls(email, verification, create_time)
         DatabaseManager.create(userswithoutverify)
@@ -246,34 +271,31 @@ class Group(db.Model):
     __table_args__ = {'extend_existing': True}
 
     _id = db.Column(db.Integer, primary_key=True)
-    _verification = db.Column(db.String, nullable=False, unique=False)
     _name = db.Column(db.String, nullable=False, unique=False)
     _type = db.Column(db.String, nullable=False, unique=False)
     _payment = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
+    _invitation_code = db.Column(db.String, nullable=False, unique=True)
+    _verification = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, verification, name, type, payment, owner_id, currency, picture) -> None:
-        self._verification = verification
+    def __init__(self, name, type, payment, owner_id, currency, invitation_code, verification, picture) -> None:
         self._name = name
         self._type = type
         self._payment = payment
         self._owner_id = owner_id
         self._currency = currency
+        self._invitation_code = invitation_code
+        self._verification = verification
         self._picture = picture
 
     def __repr__(self) -> str:
         return '<Group {}>'.format(self._name)
 
     @property
-    def verification(self) -> str:
-        return self._verification
-
-    @verification.setter
-    def verification(self, value) -> None:
-        self._verification = value
-        DatabaseManager.update()
+    def id(self) -> int:
+        return self._id
 
     @property
     def name(self) -> str:
@@ -321,6 +343,24 @@ class Group(db.Model):
         DatabaseManager.update()
 
     @property
+    def invitation_code(self) -> str:
+        return self._invitation_code
+
+    @invitation_code.setter
+    def verification(self, value) -> None:
+        self._invitation_code = value
+        DatabaseManager.update()
+
+    @property
+    def verification(self) -> str:
+        return self._verification
+
+    @verification.setter
+    def verification(self, value) -> None:
+        self._verification = value
+        DatabaseManager.update()
+
+    @property
     def picture(self) -> str:
         return self._picture
 
@@ -333,9 +373,13 @@ class Group(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, verification, name, type, payment, owner_id, currency, picture=None) -> Group:
-        group = cls(verification, name, type, payment,
-                    owner_id, currency, picture)
+    def create(cls, name, type, payment, owner_id, currency, verification, picture=None) -> Group:
+        invitation_code = gen_random_text(length=10, digit=True, letter=True)
+        while Group.query.filter_by(_invitation_code=invitation_code).first():
+            invitation_code = gen_random_text(
+                length=10, digit=True, letter=True)
+        group = cls(name, type, payment, owner_id, currency,
+                    invitation_code, verification, picture)
         DatabaseManager.create(group)
         return group
 
@@ -345,24 +389,34 @@ class Event(db.Model):
 
     _id = db.Column(db.Integer, primary_key=True)
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
+    _amount = db.Column(db.Integer, nullable=False, unique=False)
     _description = db.Column(db.Text, nullable=False, unique=False)
     _note = db.Column(db.Text, nullable=False, unique=False)
     _payer_id = db.Column(db.Integer, nullable=False, unique=False)
-    _datatime = db.Column(db.DateTime, nullable=False, unique=False)
+    _split_method = db.Column(db.String, nullable=False, unique=False)
+    _datetime = db.Column(db.DateTime, nullable=False, unique=False)
     _type = db.Column(db.String, nullable=False, unique=False)
+    _closed = db.Column(db.Boolean, nullable=True, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, group_id, description, note, payer_id, datatime, type, picture) -> None:
+    def __init__(self, group_id, amount, description, note, payer_id, split_method, datetime, type, closed, picture) -> None:
         self._group_id = group_id
+        self._amount = amount
         self._description = description
         self._note = note
         self._payer_id = payer_id
-        self._datatime = datatime
+        self._split_method = split_method
+        self._datetime = datetime
         self._type = type
+        self._closed = closed
         self._picture = picture
 
     def __repr__(self) -> str:
         return '<Event {}>'.format(self._description)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def group_id(self) -> int:
@@ -371,6 +425,15 @@ class Event(db.Model):
     @group_id.setter
     def group_id(self, value) -> None:
         self._group_id = value
+        DatabaseManager.update()
+
+    @property
+    def amount(self) -> int:
+        return self._amount
+
+    @amount.setter
+    def amount(self, value) -> None:
+        self._amount = value
         DatabaseManager.update()
 
     @property
@@ -401,12 +464,21 @@ class Event(db.Model):
         DatabaseManager.update()
 
     @property
-    def datatime(self) -> datetime:
-        return self._datatime
+    def split_method(self) -> str:
+        return self._split_method
 
-    @datatime.setter
-    def datatime(self, value) -> None:
-        self._datatime = value
+    @split_method.setter
+    def split_method(self, value) -> str:
+        self._split_method = value
+        DatabaseManager.update()
+
+    @property
+    def datetime(self) -> datetime:
+        return self._datetime
+
+    @datetime.setter
+    def datetime(self, value) -> None:
+        self._datetime = value
         DatabaseManager.update()
 
     @property
@@ -419,6 +491,15 @@ class Event(db.Model):
         DatabaseManager.update()
 
     @property
+    def closed(self) -> bool:
+        return self._closed
+
+    @closed.setter
+    def closed(self, value) -> None:
+        self._closed = value
+        DatabaseManager.update()
+
+    @property
     def picture(self) -> str:
         return self._picture
 
@@ -427,13 +508,26 @@ class Event(db.Model):
         self._picture = value
         DatabaseManager.update()
 
+    def try_close_event(self) -> None:
+        if self.closed:
+            return
+        event_member = {item.user_id: item for item in (
+            EventOfPending.query.filter_by(_event_id=self.id).all() or [])}
+        for item in event_member.values():
+            if item.personal_expenses > 0 and not item.agree:
+                return
+        for group_of_user in (GroupOfUsers.query.filter_by(_group_id=self.group_id) or []):
+            group_of_user.personal_balance -= event_member[group_of_user.user_id].personal_expenses
+        self.closed = True
+        return
+
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, description, note, payer_id, datatime, type, picture=None) -> Event:
-        event = cls(group_id, description, note, payer_id,
-                    datatime, type, picture)
+    def create(cls, group_id, amount, description, note, payer_id, split_method, datetime, type, picture=None) -> Event:
+        event = cls(group_id, amount, description, note, payer_id,
+                    split_method, datetime, type, False, picture)
         DatabaseManager.create(event)
         return event
 
@@ -445,16 +539,22 @@ class EventOfPending(db.Model):
     _event_id = db.Column(db.Integer, nullable=False, unique=False)
     _user_id = db.Column(db.Integer, nullable=False, unique=False)
     _personal_expenses = db.Column(db.Integer, nullable=False, unique=False)
+    _input_value = db.Column(db.Integer, nullable=False, unique=False)
     _agree = db.Column(db.Boolean, nullable=False, unique=False)
 
-    def __init__(self, event_id, user_id, personal_expenses, agree) -> None:
+    def __init__(self, event_id, user_id, personal_expenses, input_value, agree) -> None:
         self._event_id = event_id
         self._user_id = user_id
         self._personal_expenses = personal_expenses
+        self._input_value = input_value
         self._agree = agree
 
     def __repr__(self) -> str:
         return '<EventOfPending {} {}>'.format(self._event_id, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def event_id(self) -> int:
@@ -484,6 +584,15 @@ class EventOfPending(db.Model):
         DatabaseManager.update()
 
     @property
+    def input_value(self) -> int:
+        return self._input_value
+
+    @input_value.setter
+    def input_value(self, value) -> None:
+        self._input_value = value
+        DatabaseManager.update()
+
+    @property
     def agree(self) -> bool:
         return self._agree
 
@@ -496,8 +605,9 @@ class EventOfPending(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, event_id, user_id, personal_expenses, agree) -> EventOfPending:
-        eventofpending = cls(event_id, user_id, personal_expenses, agree)
+    def create(cls, event_id, user_id, personal_expenses, input_value, agree) -> EventOfPending:
+        eventofpending = cls(
+            event_id, user_id, personal_expenses, input_value, agree)
         DatabaseManager.create(eventofpending)
         return eventofpending
 
@@ -517,6 +627,10 @@ class MessageOfEvent(db.Model):
 
     def __repr__(self) -> str:
         return '<MessageOfEvent {} {}>'.format(self._event_id, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def event_id(self) -> int:
