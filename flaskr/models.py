@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 import random
 import string
+from typing import Union
 
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,7 +11,7 @@ from flask_login import UserMixin
 from flaskr import db, login_manager
 
 
-def gen_random_text(length: int, digit: bool, letter: bool) -> str:
+def gen_random_text(length: int, digit: bool = False, letter: bool = False) -> str:
     if digit and letter:
         return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
     elif digit:
@@ -231,16 +232,19 @@ class Group(db.Model):
     _name = db.Column(db.String, nullable=False, unique=False)
     _type = db.Column(db.String, nullable=False, unique=False)
     _payment = db.Column(db.Integer, nullable=False, unique=False)
+    _top_up_each_time = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
     _invitation_code = db.Column(db.String, nullable=False, unique=True)
     _verification = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, name, type, payment, owner_id, currency, invitation_code, verification, picture) -> None:
+    def __init__(self, name: str, type: str, payment: int, top_up_each_time: int, owner_id: int, currency: str,
+                 invitation_code: str, verification: str, picture: Union[str, None]) -> None:
         self._name = name
         self._type = type
         self._payment = payment
+        self._top_up_each_time = top_up_each_time
         self._owner_id = owner_id
         self._currency = currency
         self._invitation_code = invitation_code
@@ -279,6 +283,15 @@ class Group(db.Model):
     @payment.setter
     def payment(self, value) -> None:
         self._payment = value
+        DatabaseManager.update()
+
+    @property
+    def top_up_each_time(self) -> int:
+        return self._top_up_each_time
+
+    @top_up_each_time.setter
+    def top_up_each_time(self, value) -> None:
+        self._top_up_each_time = value
         DatabaseManager.update()
 
     @property
@@ -330,11 +343,14 @@ class Group(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, name, type, payment, owner_id, currency, verification, picture=None) -> Group:
-        invitation_code = gen_random_text(length=10, digit=True, letter=True)
+    def create(cls, name: str, type: str, payment: int, top_up_each_time: int, owner_id: int, currency: str,
+               picture: Union[str, None] = None) -> Group:
+        invitation_code = gen_random_text(length=6, digit=True)
+        verification_code = gen_random_text(length=10, digit=True, letter=True)
         while Group.query.filter_by(_invitation_code=invitation_code).first():
-            invitation_code = gen_random_text(length=10, digit=True, letter=True)
-        group = cls(name, type, payment, owner_id, currency, invitation_code, verification, picture)
+            invitation_code = gen_random_text(length=6, digit=True)
+        group = cls(name=name, type=type, payment=payment, top_up_each_time=top_up_each_time, owner_id=owner_id,
+                    currency=currency, invitation_code=invitation_code, verification=verification_code, picture=picture)
         DatabaseManager.create(group)
         return group
 
@@ -423,9 +439,14 @@ class UserGroup(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, user_id, group_id, user_name, personal_balance, account, received) -> UserGroup:
-        user_group = cls(user_id, group_id, user_name, personal_balance, account, received)
-        DatabaseManager.create(user_group)
+    def create(cls, user_id: int, group_id: int, nickname: str) -> UserGroup:
+        user_group = UserGroup.query.filter_by(_user_id=user_id, _group_id=group_id).first()
+        if not user_group:
+            account = gen_random_text(length=12, digit=True)
+            user_group = cls(user_id=user_id, group_id=group_id, user_name=nickname,
+                            personal_balance=0, account=account, receieved=0)
+            DatabaseManager.create(user_group)
+        user_group.user_name = nickname
         return user_group
 
 
