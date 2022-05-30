@@ -4,6 +4,11 @@ from flask_login import login_required, current_user
 from flaskr.models import User, UsersWithoutVerify, Group, UserGroup, Transaction, UserTransaction, TransactionMessage
 from flaskr import app
 
+from datetime import date, datetime, timedelta
+import json
+import random
+import string
+
 
 def isempty(*args: str) -> bool:
     for arg in args:
@@ -15,34 +20,266 @@ def isempty(*args: str) -> bool:
 @app.route('/api/transaction/new-transaction', methods=['POST'])
 @login_required
 def new_transaction():
-    return jsonify(None)
+    group_id = request.values.get('group_id', '')
+    title = request.values.get('title', '')
+    amount = request.values.get('amount', '')
+    transaction_type = request.values.get('type', '')
+    split_method = request.values.get('split_method', '')
+    divider = request.values.get('divider', '')
+    payer_id = request.values.get('payer_id', '')
+    note = request.values.get('note', '')
+    picture = request.values.get('picture', '')
+
+    try:
+        group_id = int(group_id)
+        payer_id = int(payer_id)
+        amount = int(amount)
+        divider = json.loads(divider)
+    except:
+        print(165)
+        abort(400)
+
+    if isempty(title) or amount <= 0 or isempty(transaction_type) or type(divider) != list or len(divider) == 0:
+        print(265)
+        abort(400)
+    if split_method not in ['percentage', 'extra', 'normal', 'number_of']:
+        print(365)
+        abort(400)
+
+    data = {'transaction_id': None}
+
+    transaction = Transaction.create(group_id=group_id, amount=amount, description=title, note=note,
+                                     payer_id=payer_id, split_method=split_method, datetime=datetime.now(),
+                                     type=transaction_type)
+    member_expense_sum = 0
+    if split_method == 'percentage':
+        for person in divider:
+            personal_expenses = amount * (person['value'] * 0.01)
+            UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
+                                   personal_expenses=personal_expenses, input_value=person['value'], agree=False)
+            member_expense_sum += personal_expenses
+    elif split_method == 'extra':
+        common_amount = amount - sum([person['value'] for person in divider])
+        personal_common_expense = int(common_amount / len(divider))
+        for person in divider:
+            personal_expenses = personal_common_expense + person['value']
+            UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
+                                   personal_expenses=personal_expenses, input_value=person['value'], agree=False)
+            member_expense_sum += personal_expenses
+    elif split_method == 'normal':
+        for person in divider:
+            UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
+                                   personal_expenses=person['value'], input_value=person['value'], agree=False)
+            member_expense_sum += person['value']
+    elif split_method == 'number_of':
+        total = sum([person['value'] for person in divider])
+        for person in divider:
+            personal_expenses = int(amount / total)
+            UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
+                                   personal_expenses=personal_expenses, input_value=person['value'], agree=False)
+            member_expense_sum += personal_expenses
+    currentuser_event = UserTransaction.query.filter_by(
+        _transaction_id=transaction._id, _user_id=current_user.id).first()  # 設為同意的為記錄此帳的人
+    currentuser_event.agree = True
+    transaction.amount = member_expense_sum
+    transaction.try_close_transaction()
+    data['transaction_id'] = transaction._id
+    return jsonify(data)
 
 
 @app.route('/api/transaction/get-info', methods=['GET'])
 @login_required
 def get_transaction_info():
-    return jsonify(None)
+    transacion_id = request.args.get("transaction_id", '')
+    amount = request.args.get("amount", -1)  # -1 比表示回傳全部
+
+    try:
+        transaction_id = int(transacion_id)
+        amount = int(amount)
+    except:
+        abort(400)
+
+    data = {"title": "", "amount": 0, "type": "", "state": False, "date": "", "split_method": "",
+            "payer_id": 0, "payer_name": "", "note": "", "picture": "", "divider": [], "message_list": []}
+
+    transaction = Transaction.query.get(transacion_id)
+    if not transaction:
+        abort(404)
+    data = {"title": transaction.description, "amount": transaction.amount, "type": transaction.type, "state": True,
+            "date": transaction.datetime.date().isoformat(), "split_method": transaction.split_method,
+            "payer_id": transaction.payer_id, "payer_name": "", "note": transaction.note, "picture": transaction.picture,
+            "divider": [], "message_list": []}
+    for member in (UserGroup.query.filter_by(_group_id=transaction.group_id).all() or []):
+        user = User.query.get(member.user_id)
+        member_event = UserTransaction.query.filter_by(_transaction_id=transaction.id, _user_id=user.id).first()
+        if member.id == transaction.payer_id:
+            data['payer_name'] = member.user_name
+        if member_event.personal_expenses > 0 and not member_event.agree:
+            data['state'] = False
+        data['divider'].append({'user_id': user.id, 'nickname': member.user_name,
+                                'amount': member_event.personal_expenses, "input_value": member_event.input_value,
+                                'state': member_event.agree, 'picture': user.picture})
+    count = 0
+    for message in (TransactionMessage.query.filter_by(_transaction_id=transaction.id).all() or []):
+        count += 1
+        user = UserGroup.query.filter_by(_group_id=transaction.group_id, _user_id=message.user_id).first()
+        data['message_list'].append({'user_name': user.user_name, 'message': message.messages})
+        print(count)
+        if count == amount:
+            print(count == amount)
+            break
+
+    return jsonify(data)
 
 
 @app.route('/api/transaction/get-group-transaction', methods=['GET'])
 @login_required
 def get_group_transaction():
-    return jsonify(None)
+    group_id = request.args.get('group_id', '')
+    days = request.args.get('days', None)
+    amount = request.args.get('amount', -1)
+    # define case1:只傳天數、case2:只傳amount、case3:兩者皆傳、case4都沒傳
+    if days != None and amount != -1: #case3:兩者皆傳
+        case = 3
+        try:
+            group_id = int(group_id)
+            days = int(days)
+            amount = int(amount)
+        except:
+            abort(400)
+    elif days == None and amount != -1:#case2:只傳amount
+        case = 2
+        days = 100  # 讓第一個for迴圈可執行
+        try:
+            group_id = int(group_id)
+            amount = int(amount)
+            days = int(days)
+        except:
+            abort(400)
+    elif days != None and amount == -1: #case1:只傳天數
+        case = 1
+        try:
+            group_id = int(group_id)
+            days = int(days)
+        except:
+            abort(400)
+    else:                             # case4 都沒傳
+        case = 4
+        days = 100  # 讓第一個for迴圈可執行
+        try:
+            group_id = int(group_id)
+            days = int(days)
+        except:
+            abort(400)
+
+    data = list()
+    count = 0
+    for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
+        day_info = {'date': single_date.isoformat(), 'total': 0, 'transactions': list()}
+        for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
+            # if (case==1 or case==3):  #只傳天數，或兩者都傳  ##為了還是保持日期正確性，此兩個case預設拿前100天
+            if transaction.datetime.date() != single_date:
+                continue
+            transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
+                                'total_money': transaction.amount, 'state': True}
+            for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
+                if response.personal_expenses > 0 and not response.agree:
+                    transaction_info['state'] = False
+                    break
+            day_info['transactions'].append(transaction_info)
+            day_info['total'] = day_info['total'] + \
+                transaction_info['total_money'] if transaction_info['state'] else day_info['total']
+            if case != 4:  # case4 都沒傳 不受amount限制，全部回傳
+                count += 1
+                if(count == amount):
+                    break
+        data.append(day_info)
+        if case != 4 and count == amount:
+            break
+
+    return jsonify(data)
 
 
-@app.route('/api/transaction/get-nonagreed-transaction', methods=['GET'])
+@app.route('/api/transaction/get-nonagreed-transaction', methods=['POST'])
 @login_required
 def get_nonagreed_transaction():
-    return jsonify(None)
+    group_id = request.values.get('group_id', '')
+    amount=request.values.get('amount', -1)
+
+    try:
+        group_id = int(group_id)
+        amount=int(amount)
+    except:
+        abort(400)
+
+    data=list()
+
+    count = 0
+    for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
+        transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
+                                'total_money': transaction.amount, 'date': transaction.datetime.date().isoformat()}
+        for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
+            if response.personal_expenses > 0 and not response.agree:
+                transaction_info['state'] = False
+                break
+        data.append(transaction_info)
+        count += 1
+        if(count == amount):
+            break
+
+    return jsonify(data)
 
 
-@app.route('/api/transaction/new-message', methods=['POST'])
+@app.route('/api/transaction/new-message', methods=['GET'])
 @login_required
 def new_transaction_message():
-    return jsonify(None)
+    transaction_id = request.args.get('transaction_id', '')
+    message = request.args.get('message', '')
+
+    try:
+        transaction_id = int(transaction_id)
+        message = json.loads(message)
+    except:
+        abort(400)
+
+    if type(message) != dict or message['type'] not in ['agree', 'disagree', 'message']:
+        abort(400)
+
+    data = False
+
+    transaction = Transaction.query.get(transaction_id)
+    event_of_pending = UserTransaction.query.filter_by(
+        _transaction_id=transaction_id, _user_id=current_user.id).first()
+    if message.get('type') == 'agree':
+        event_of_pending.agree = True
+        data = True
+    elif message.get('type') == 'disagree':
+        event_of_pending.agree = False
+        TransactionMessage.create(transaction_id=transaction_id, user_id=current_user.id,
+                                  messages=message.get('content'))
+        data = True
+    elif not isempty(message.get('content')):
+        TransactionMessage.create(transaction_id=transaction_id, user_id=current_user.id,
+                                  messages=message.get('content'))
+        data = True
+    transaction.try_close_transaction()
+    return jsonify(data)
 
 
 @app.route('/api/transaction/get-transaction-type', methods=['GET'])
 @login_required
 def get_transaction_type():
-    return jsonify(None)
+    group_id = request.args.get('group_id', '')
+    try:
+        group_id = int(group_id)
+    except:
+        abort(400)
+
+    data=list()
+    type_list=['KIND','KIND1','KIND2']
+
+    for type in type_list:
+        transaction_list=Transaction.query.filter_by(_group_id=group_id,_type=type).all()
+        if len(transaction_list)!=0:
+            data.append({'type':type,'amount':len(transaction_list)})
+    return jsonify(data)
