@@ -108,21 +108,30 @@ def get_group_info():
     return jsonify(data)
 
 
-@app.route('/api/user/set-personal-info', methods=['GET'])
+@app.route('/api/user/set-personal-info', methods=['POST'])
 @login_required
 def set_personal_info():
-    nickname = request.args.get('nickname', '')
-    picture = request.args.get('picture', '')
-    group_id = request.args.get('group_id', '')
+    nickname = request.values.get('nickname', '')
+    group_id = request.values.get('group_id', '')
 
     if isempty(nickname):
         abort(400)
 
     data = False
+
     if isempty(group_id):
+        try:
+            nickname = str(nickname)
+        except:
+            abort(400)
         current_user.name = nickname
         data = True
     else:
+        try:
+            nickname = str(nickname)
+            group_id = int(group_id)
+        except:
+            abort(400)
         get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
         if get_usergroup is not None:
             get_usergroup.user_name = nickname
@@ -139,7 +148,11 @@ def get_group_user_info():
     if isempty(group_id):
         abort(400)
 
-    group_id = int(group_id)
+    try:
+        group_id = int(group_id)
+    except:
+        abort(400)
+
     get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
     get_group = Group.query.filter_by(_id=group_id).first()
     if get_usergroup is not None:
@@ -167,7 +180,11 @@ def remittance_finished():
     if isempty(group_id):
         abort(400)
 
-    group_id = int(group_id)
+    try:
+        group_id = int(group_id)
+    except:
+        abort(400)
+
     data = False
     group = Group.query.get(group_id)
     group_user = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
