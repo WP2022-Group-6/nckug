@@ -6,8 +6,6 @@ from flaskr import app
 
 from datetime import date, datetime, timedelta
 import json
-import random
-import string
 
 
 def isempty(*args: str) -> bool:
@@ -36,14 +34,11 @@ def new_transaction():
         amount = int(amount)
         divider = json.loads(divider)
     except:
-        print(165)
         abort(400)
 
     if isempty(title) or amount <= 0 or isempty(transaction_type) or type(divider) != list or len(divider) == 0:
-        print(265)
         abort(400)
     if split_method not in ['percentage', 'extra', 'normal', 'number_of']:
-        print(365)
         abort(400)
 
     data = {'transaction_id': None}
@@ -90,19 +85,20 @@ def new_transaction():
 @app.route('/api/transaction/get-info', methods=['GET'])
 @login_required
 def get_transaction_info():
-    transacion_id = request.args.get("transaction_id", '')
-    amount = request.args.get("amount", -1)  # -1 比表示回傳全部
+    transaction_id = request.args.get("transaction_id", '')
+    amount = request.args.get("amount", None)  # None 比表示回傳全部
 
     try:
-        transaction_id = int(transacion_id)
-        amount = int(amount)
+        transaction_id = int(transaction_id)
+        if amount is not None:
+            amount = int(amount)
     except:
         abort(400)
 
     data = {"title": "", "amount": 0, "type": "", "state": False, "date": "", "split_method": "",
             "payer_id": 0, "payer_name": "", "note": "", "picture": "", "divider": [], "message_list": []}
 
-    transaction = Transaction.query.get(transacion_id)
+    transaction = Transaction.query.get(transaction_id)
     if not transaction:
         abort(404)
     data = {"title": transaction.description, "amount": transaction.amount, "type": transaction.type, "state": True,
@@ -124,10 +120,9 @@ def get_transaction_info():
         count += 1
         user = UserGroup.query.filter_by(_group_id=transaction.group_id, _user_id=message.user_id).first()
         data['message_list'].append({'user_name': user.user_name, 'message': message.messages})
-        print(count)
-        if count == amount:
-            print(count == amount)
-            break
+        if amount is not None:
+            if count == amount:
+                break
 
     return jsonify(data)
 
@@ -137,49 +132,65 @@ def get_transaction_info():
 def get_group_transaction():
     group_id = request.args.get('group_id', '')
     days = request.args.get('days', None)
-    amount = request.args.get('amount', -1)
-    # define case1:只傳天數、case2:只傳amount、case3:兩者皆傳、case4都沒傳
-    if days != None and amount != -1: #case3:兩者皆傳
-        case = 3
+    amount = request.args.get('amount', None)
+
+    try:
+        group_id = int(group_id)
+    except:
+        abort(400)
+
+    if (days != None and amount != None) or (days != None and amount == None):  # 兩者皆傳 #只傳天數
         try:
-            group_id = int(group_id)
             days = int(days)
-            amount = int(amount)
-        except:
-            abort(400)
-    elif days == None and amount != -1:#case2:只傳amount
-        case = 2
-        days = 100  # 讓第一個for迴圈可執行
-        try:
-            group_id = int(group_id)
-            amount = int(amount)
-            days = int(days)
-        except:
-            abort(400)
-    elif days != None and amount == -1: #case1:只傳天數
-        case = 1
-        try:
-            group_id = int(group_id)
-            days = int(days)
-        except:
-            abort(400)
-    else:                             # case4 都沒傳
-        case = 4
-        days = 100  # 讓第一個for迴圈可執行
-        try:
-            group_id = int(group_id)
-            days = int(days)
+            if amount is not None:
+                amount = int(amount)
         except:
             abort(400)
 
-    data = list()
-    count = 0
-    for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
-        day_info = {'date': single_date.isoformat(), 'total': 0, 'transactions': list()}
-        for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
-            # if (case==1 or case==3):  #只傳天數，或兩者都傳  ##為了還是保持日期正確性，此兩個case預設拿前100天
-            if transaction.datetime.date() != single_date:
-                continue
+        data = list()
+        count = 0
+        for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
+            day_info = {'date': single_date.isoformat(), 'total': 0, 'transactions': list()}
+            for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
+                if transaction.datetime.date() != single_date:
+                    continue
+                transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
+                                    'total_money': transaction.amount, 'state': True}
+                for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
+                    if response.personal_expenses > 0 and not response.agree:
+                        transaction_info['state'] = False
+                        break
+                day_info['transactions'].append(transaction_info)
+                day_info['total'] = day_info['total'] + \
+                    transaction_info['total_money'] if transaction_info['state'] else day_info['total']
+                count += 1
+                if amount is not None:
+                    if(count == amount):
+                        break
+            data.append(day_info)
+            if amount is not None:
+                if(count == amount):
+                    break
+
+    else:  # 只傳amount #都沒傳
+        try:
+            if amount is not None:
+                amount = int(amount)
+        except:
+            abort(400)
+
+        data = list()
+        count = 0
+        last_date = date
+        for transaction in (Transaction.query.filter_by(_group_id=group_id).order_by(Transaction._datetime.desc()).all() or []):
+            if count == 0:
+                last_date = transaction.datetime.date()
+                day_info = {'date': '', 'total': 0, 'transactions': list()}
+                day_info['date'] = transaction.datetime.date().isoformat()
+            if last_date != transaction.datetime.date():
+                data.append(day_info)
+                day_info = {'date': '', 'total': 0, 'transactions': list()}
+                day_info['date'] = transaction.datetime.date().isoformat()
             transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
                                 'total_money': transaction.amount, 'state': True}
             for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
@@ -189,14 +200,14 @@ def get_group_transaction():
             day_info['transactions'].append(transaction_info)
             day_info['total'] = day_info['total'] + \
                 transaction_info['total_money'] if transaction_info['state'] else day_info['total']
-            if case != 4:  # case4 都沒傳 不受amount限制，全部回傳
-                count += 1
+            count += 1
+            if amount is not None:
                 if(count == amount):
+                    data.append(day_info)
                     break
-        data.append(day_info)
-        if case != 4 and count == amount:
-            break
-
+            if (count == Transaction.query.filter(Transaction._group_id).count()):
+                data.append(day_info)       #最後一個要存回去
+            last_date = transaction.datetime.date() 
     return jsonify(data)
 
 
@@ -204,29 +215,30 @@ def get_group_transaction():
 @login_required
 def get_nonagreed_transaction():
     group_id = request.values.get('group_id', '')
-    amount=request.values.get('amount', -1)
+    amount = request.values.get('amount', None)
 
     try:
         group_id = int(group_id)
-        amount=int(amount)
+        if amount is not None:
+            amount = int(amount)
     except:
         abort(400)
 
-    data=list()
+    data = list()
 
     count = 0
     for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
         transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
-                                'total_money': transaction.amount, 'date': transaction.datetime.date().isoformat()}
+                            'total_money': transaction.amount, 'date': transaction.datetime.date().isoformat()}
         for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
             if response.personal_expenses > 0 and not response.agree:
                 transaction_info['state'] = False
                 break
         data.append(transaction_info)
         count += 1
-        if(count == amount):
-            break
-
+        if amount is not None:
+            if count == amount:
+                break
     return jsonify(data)
 
 
@@ -275,11 +287,11 @@ def get_transaction_type():
     except:
         abort(400)
 
-    data=list()
-    type_list=['KIND','KIND1','KIND2']
+    data = list()
+    type_list = ['KIND', 'KIND1', 'KIND2']
 
     for type in type_list:
-        transaction_list=Transaction.query.filter_by(_group_id=group_id,_type=type).all()
-        if len(transaction_list)!=0:
-            data.append({'type':type,'amount':len(transaction_list)})
+        transaction_list = Transaction.query.filter_by(_group_id=group_id, _type=type).all()
+        if len(transaction_list) != 0:
+            data.append({'type': type, 'amount': len(transaction_list)})
     return jsonify(data)
