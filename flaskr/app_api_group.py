@@ -120,19 +120,15 @@ def set_personal_info():
     data = False
 
     if isempty(group_id):
-        try:
-            nickname = str(nickname)
-        except:
-            abort(400)
         current_user.name = nickname
         data = True
     else:
         try:
-            nickname = str(nickname)
             group_id = int(group_id)
+            get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
         except:
             abort(400)
-        get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
+
         if get_usergroup is not None:
             get_usergroup.user_name = nickname
             data = True
@@ -150,11 +146,11 @@ def get_group_user_info():
 
     try:
         group_id = int(group_id)
+        get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
+        get_group = Group.query.filter_by(_id=group_id).first()
     except:
         abort(400)
 
-    get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
-    get_group = Group.query.filter_by(_id=group_id).first()
     if get_usergroup is not None:
         if get_group.owner_id == current_user.id:
             ownerormember = "owner"
@@ -168,7 +164,7 @@ def get_group_user_info():
                 data['transactions'].append({'transaction_id': transaction.id, 'title': transaction.description,
                                              'money': user_transaction.personal_expenses, 'state': user_transaction.agree, 'date': transaction.datetime})
     else:
-        data = "This group id is not matched this user "
+        abort(400)
     return jsonify(data)
 
 
@@ -182,12 +178,13 @@ def remittance_finished():
 
     try:
         group_id = int(group_id)
+        group = Group.query.get(group_id)
+        group_user = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
     except:
         abort(400)
 
     data = False
-    group = Group.query.get(group_id)
-    group_user = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
+
     if group and group_user and (group.payment > group_user.received):
         group_user.personal_balance = group_user.personal_balance + (group.payment - group_user.received)
         group_user.received = group.payment

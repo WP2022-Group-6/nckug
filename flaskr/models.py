@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 import random
 import string
+from turtle import title
 from typing import Union
 
 from sqlalchemy import func
@@ -444,7 +445,7 @@ class UserGroup(db.Model):
         if not user_group:
             account = gen_random_text(length=12, digit=True)
             user_group = cls(user_id=user_id, group_id=group_id, user_name=nickname,
-                            personal_balance=0, account=account, receieved=0)
+                             personal_balance=0, account=account, receieved=0)
             DatabaseManager.create(user_group)
         user_group.user_name = nickname
         return user_group
@@ -731,3 +732,209 @@ class TransactionMessage(db.Model):
         transaction_message = cls(transaction_id, user_id, messages)
         DatabaseManager.create(transaction_message)
         return transaction_message
+
+
+class Post(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    _id = db.Column(db.Integer, primary_key=True)
+    _user_id = db.Column(db.Integer, nullable=False, unique=False)
+    _title = db.Column(db.Text, nullable=False, unique=False)
+    _content = db.Column(db.Text, nullable=False, unique=False)
+
+    def __init__(self, user_id, title, content) -> None:
+        self._user_id = user_id
+        self._title = title
+        self._content = content
+
+    def __repr__(self) -> str:
+        return '<Post {} owned by User {}>'.format(self._title, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, value) -> None:
+        self._user_id = value
+        DatabaseManager.update()
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @title.setter
+    def title(self, value) -> None:
+        self._title = value
+        DatabaseManager.update()
+
+    @property
+    def content(self) -> str:
+        return self._content
+
+    @content.setter
+    def content(self, value) -> None:
+        self._content = value
+        DatabaseManager.update()
+
+    def remove(self) -> bool:
+        return DatabaseManager.delete(self)
+
+    @classmethod
+    def create(cls, user_id, title, content) -> Post:
+        post = cls(user_id, title, content)
+        DatabaseManager.create(post)
+        return post
+
+
+class PostComment(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    _id = db.Column(db.Integer, primary_key=True)
+    _post_id = db.Column(db.Integer, nullable=False, unique=False)
+    _user_id = db.Column(db.Integer, nullable=False, unique=False)
+    _content = db.Column(db.Text, nullable=False, unique=False)
+
+    def __init__(self, post_id, user_id, content) -> None:
+        self._post_id = post_id
+        self._user_id = user_id
+        self._content = content
+
+    def __repr__(self) -> str:
+        return '<PostComment of Post {} and User {}>'.format(self._post_id, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def post_id(self) -> int:
+        return self._post_id
+
+    @post_id.setter
+    def post_id(self, value) -> None:
+        self._post_id = value
+        DatabaseManager.update()
+
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, value) -> None:
+        self._user_id = value
+        DatabaseManager.update()
+
+    @property
+    def content(self) -> str:
+        return self._content
+
+    @content.setter
+    def content(self, value) -> None:
+        self._content = value
+        DatabaseManager.update()
+
+    def remove(self) -> bool:
+        return DatabaseManager.delete(self)
+
+    @classmethod
+    def create(cls, post_id, user_id, content) -> PostComment:
+        postcomment = cls(post_id, user_id, content)
+        DatabaseManager.create(postcomment)
+        return postcomment
+
+
+class Like(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    _id = db.Column(db.Integer, primary_key=True)
+    _post_id = db.Column(db.Integer, nullable=False, unique=False)
+    _user_id = db.Column(db.Integer, nullable=False, unique=False)
+
+    def __init__(self, post_id, user_id) -> None:
+        self._post_id = post_id
+        self._user_id = user_id
+
+    def __repr__(self) -> str:
+        return '<Like of Post {} and User {}>'.format(self._post_id, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def post_id(self) -> int:
+        return self._post_id
+
+    @post_id.setter
+    def post_id(self, value) -> None:
+        self._post_id = value
+        DatabaseManager.update()
+
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, value) -> None:
+        self._user_id = value
+        DatabaseManager.update()
+
+    def remove(self) -> bool:
+        return DatabaseManager.delete(self)
+
+    @classmethod
+    def create(cls, post_id, user_id) -> Like:
+        like = cls(post_id, user_id)
+        DatabaseManager.create(like)
+        return like
+
+
+class Collection(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    _id = db.Column(db.Integer, primary_key=True)
+    _post_id = db.Column(db.Integer, nullable=False, unique=False)
+    _user_id = db.Column(db.Integer, nullable=False, unique=False)
+
+    def __init__(self, post_id, user_id) -> None:
+        self._post_id = post_id
+        self._user_id = user_id
+
+    def __repr__(self) -> str:
+        return '<Collection of Post {} and User {}>'.format(self._post_id, self._user_id)
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def post_id(self) -> int:
+        return self._post_id
+
+    @post_id.setter
+    def post_id(self, value) -> None:
+        self._post_id = value
+        DatabaseManager.update()
+
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, value) -> None:
+        self._user_id = value
+        DatabaseManager.update()
+
+    def remove(self) -> bool:
+        return DatabaseManager.delete(self)
+
+    @classmethod
+    def create(cls, post_id, user_id) -> Collection:
+        collection = cls(post_id, user_id)
+        DatabaseManager.create(collection)
+        return collection
