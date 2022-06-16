@@ -1,7 +1,7 @@
 from flask import abort, jsonify, request
 from flask_login import login_required, current_user
 
-from flaskr.models import User, UsersWithoutVerify, Group, UserGroup, Transaction, UserTransaction, TransactionMessage
+from flaskr.models import PostComment, User, UsersWithoutVerify, Group, UserGroup, Transaction, UserTransaction, TransactionMessage
 from flaskr import app
 
 from datetime import date, datetime, timedelta
@@ -15,9 +15,10 @@ def isempty(*args: str) -> bool:
     return False
 
 
-@app.route('/api/transaction/new-transaction', methods=['POST'])
+@app.route('/api/transaction/set-transaction', methods=['POST'])
 @login_required
-def new_transaction():
+def set_transaction():
+    transaction_id = request.values.get('transaction_id', None)
     group_id = request.values.get('group_id', '')
     title = request.values.get('title', '')
     amount = request.values.get('amount', '')
@@ -33,6 +34,8 @@ def new_transaction():
         payer_id = int(payer_id)
         amount = int(amount)
         divider = json.loads(divider)
+        if transaction_id is not None:
+            transaction_id = int(transaction_id)
     except:
         abort(400)
 
@@ -42,10 +45,22 @@ def new_transaction():
         abort(400)
 
     data = {'transaction_id': None}
-
-    transaction = Transaction.create(group_id=group_id, amount=amount, description=title, note=note,
-                                     payer_id=payer_id, split_method=split_method, datetime=datetime.now(),
-                                     type=transaction_type)
+    if transaction_id is None:
+        transaction = Transaction.create(group_id=group_id, amount=amount, description=title, note=note,
+                                         payer_id=payer_id, split_method=split_method, datetime=datetime.now(),
+                                         type=transaction_type)
+    else:
+        transaction = Transaction.query.get(transaction_id)
+        transaction.amount = amount
+        transaction.description = title
+        print(transaction.description)
+        transaction.note = note
+        transaction.payer_id = payer_id
+        transaction.split_method = split_method
+        transaction.datetime = datetime.now()
+        transaction.type = transaction_type
+        for usertransaction in (UserTransaction.query.filter_by(_transaction_id=transaction.id).all() or []):
+            usertransaction.remove()
     member_expense_sum = 0
     if split_method == 'percentage':
         for person in divider:
@@ -75,10 +90,12 @@ def new_transaction():
             member_expense_sum += personal_expenses
     currentuser_event = UserTransaction.query.filter_by(
         _transaction_id=transaction._id, _user_id=current_user.id).first()  # 設為同意的為記錄此帳的人
-    currentuser_event.agree = True
+    if currentuser_event is not None:
+        currentuser_event.agree = True
     transaction.amount = member_expense_sum
     transaction.try_close_transaction()
     data['transaction_id'] = transaction._id
+
     return jsonify(data)
 
 
@@ -206,16 +223,16 @@ def get_group_transaction():
                     data.append(day_info)
                     break
             if (count == Transaction.query.filter(Transaction._group_id).count()):
-                data.append(day_info)       #最後一個要存回去
-            last_date = transaction.datetime.date() 
+                data.append(day_info)  # 最後一個要存回去
+            last_date = transaction.datetime.date()
     return jsonify(data)
 
 
-@app.route('/api/transaction/get-nonagreed-transaction', methods=['POST'])
+@app.route('/api/transaction/get-nonagreed-transaction', methods=['GET'])
 @login_required
 def get_nonagreed_transaction():
-    group_id = request.values.get('group_id', '')
-    amount = request.values.get('amount', None)
+    group_id = request.args.get('group_id', '')
+    amount = request.args.get('amount', None)
 
     try:
         group_id = int(group_id)
@@ -242,11 +259,11 @@ def get_nonagreed_transaction():
     return jsonify(data)
 
 
-@app.route('/api/transaction/new-message', methods=['GET'])
+@app.route('/api/transaction/new-message', methods=['POST'])
 @login_required
 def new_transaction_message():
-    transaction_id = request.args.get('transaction_id', '')
-    message = request.args.get('message', '')
+    transaction_id = request.values.get('transaction_id', '')
+    message = request.values.get('message', '')
 
     try:
         transaction_id = int(transaction_id)

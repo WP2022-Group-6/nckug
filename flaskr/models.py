@@ -2,7 +2,6 @@ from __future__ import annotations
 from datetime import datetime
 import random
 import string
-from turtle import title
 from typing import Union
 
 from sqlalchemy import func
@@ -445,7 +444,7 @@ class UserGroup(db.Model):
         if not user_group:
             account = gen_random_text(length=12, digit=True)
             user_group = cls(user_id=user_id, group_id=group_id, user_name=nickname,
-                             personal_balance=0, account=account, receieved=0)
+                             personal_balance=0, account=account, received=0)
             DatabaseManager.create(user_group)
         user_group.user_name = nickname
         return user_group

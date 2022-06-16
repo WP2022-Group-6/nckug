@@ -19,3 +19,6 @@ config.py
 
 # Yarn
 yarn.lock
+
+# testing
+test/
