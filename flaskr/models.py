@@ -104,6 +104,20 @@ class User(db.Model, UserMixin):
         DatabaseManager.update()
 
     def remove(self) -> bool:
+        for group_user in UserGroup.query.filter_by(_user_id=self.id).all():
+            group_user.remove()
+        for usertransaction in UserTransaction.query.filter_by(_user_id=self.id).all():
+            usertransaction.remove()
+        for transactionmessage in TransactionMessage.query.filter_by(_user_id=self.id).all():
+            transactionmessage.remove()
+        for post in Post.query.filter_by(_user_id=self.id).all():
+            post.remove()
+        for postcomment in PostComment.query.filter_by(_user_id=self.id).all():
+            postcomment.remove()
+        for like in Like.query.filter_by(_user_id=self.id).all():
+            like.remove()
+        for collection in Collection.query.filter_by(_user_id=self.id).all():
+            collection.remove()
         return DatabaseManager.delete(self)
 
     @classmethod
@@ -340,6 +354,12 @@ class Group(db.Model):
         DatabaseManager.update()
 
     def remove(self) -> bool:
+        for group_user in UserGroup.query.filter_by(_group_id=self.id).all():
+            group_user.remove()
+        for transaction in Transaction.query.filter_by(_group_id=self.id).all():
+            transaction.remove()
+        for journey in Journey.query.filter_by(_group_id=self.id).all():
+            journey.remove()
         return DatabaseManager.delete(self)
 
     @classmethod
@@ -588,6 +608,10 @@ class Transaction(db.Model):
         return
 
     def remove(self) -> bool:
+        for usertransaction in UserTransaction.query.filter_by(_transaction_id=self.id).all():
+            usertransaction.remove()
+        for transactionmessage in TransactionMessage.query.filter_by(_transaction_id=self.id).all():
+            transactionmessage.remove()
         return DatabaseManager.delete(self)
 
     @classmethod
@@ -937,3 +961,71 @@ class Collection(db.Model):
         collection = cls(post_id, user_id)
         DatabaseManager.create(collection)
         return collection
+
+
+class Journey(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    _id = db.Column(db.Integer, primary_key=True)
+    _group_id = db.Column(db.Integer, nullable=False, unique=False)
+    _datatime = db.Column(db.DateTime, nullable=False, unique=False)
+    _day = db.Column(db.Integer, nullable=False, unique=False)
+    _remark = db.Column(db.String, nullable=False, unique=False)
+
+    def __init__(self, group_id, datatime, day, remark) -> None:
+        self._group_id = group_id
+        self._datatime = datatime
+        self._day = day
+        self._remark = remark
+
+    def __repr__(self) -> str:
+        return '<Journey of Group {} at {}>'.format(self._group_id, self._datatime)
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def group_id(self) -> int:
+        return self._group_id
+
+    @group_id.setter
+    def group_id(self, value) -> None:
+        self._group_id = value
+        DatabaseManager.update()
+
+    @property
+    def datatime(self) -> datetime:
+        return self._datatime
+
+    @datatime.setter
+    def datatime(self, value) -> None:
+        self._datatime = value
+        DatabaseManager.update()
+
+    @property
+    def day(self) -> int:
+        return self._day
+
+    @day.setter
+    def day(self, value) -> None:
+        self._day = value
+        DatabaseManager.update()
+
+    @property
+    def remark(self) -> str:
+        return self._remark
+
+    @remark.setter
+    def remark(self, value) -> None:
+        self._remark = value
+        DatabaseManager.update()
+
+    def remove(self) -> bool:
+        return DatabaseManager.delete(self)
+
+    @classmethod
+    def create(cls, group_id, datatime, day, remark) -> Journey:
+        journey = cls(group_id, datatime, day, remark)
+        DatabaseManager.create(journey)
+        return journey
