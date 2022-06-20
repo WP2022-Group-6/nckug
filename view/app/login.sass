@@ -20,19 +20,21 @@ body
     width: 70vw
     height: 35vw
     box-shadow: 0 0.2em 0.2em #00000059
+    transition-duration: 0.4s
 
-.entrance-btn, .login-btn
+.entrance-btn button
     @extend %btn-style
     margin: auto 0 5vh 0
 
-.login-page
+.login-page, .sign-up-page, .verification-page
     @include jump-page
     h1
         font-size: 3rem
-        padding: 5%
+        padding: 2vh
+        margin: 0
     div h2
         margin: 0.5em 0 !important
-        font-size: 1.7rem
+        font-size: 1.5rem
     div input
         @extend %input-style
         height: 12vw
@@ -42,8 +44,43 @@ body
             font-size: 1.2em
             color: #808080
             font-weight: 600
+    button
+        @extend %btn-style
+        margin: auto 0 5vh 0
+    div:nth-child(1)
+        @include flex-center
+        width: 100%
+        i
+            @include circle($radi: 12vw)
+            @include flex-center
+            position: absolute
+            left: 5vw
+            background-color: white
+            color: #808080
 
-.login-error-msg
+.sign-up-page
+    height: 75vh
+    button
+        margin: 0
+
+.sign-up-button-div
+    @include flex-center($dir: column)
+    row-gap: 2vh
+    margin: auto
+    button:nth-child(2)
+        width: 30vw
+        height: 10vw
+        background-color: #B5A24C
+
+.verification-page p
+    @extend %input-style
+    display: flex
+    align-items: center
+    background-color: #808080
+    height: 12vw
+    width: 70vw
+
+.login-error-msg, .sign-up-error-msg
     color: red
 
 .choose-group-page
@@ -66,58 +103,83 @@ body
     p
         margin: 0
 
-.group-container
+.group-box
     display: flex
-    align-items: center
-    margin: 5%
-    div
-        @include circle
-        img
-            width: 100%
-    div:nth-child(1)
-        transform: translateX(10vw)
-        border: 1.5vw solid #EFA159
-        background-color: #EFA159
-    div:nth-child(2)
-        border: 1.5vw solid #FFF3E0
-        background-color: #FFF3E0
-        z-index: 10
-    div:nth-child(3)
-        transform: translateX(-10vw)
-        border: 1.5vw solid #B5A24C
-        background-color: #B5A24C
-    div:nth-child(4)
-        opacity: 0
+    flex-direction: column
+    justify-content: center
+    width: 100vw
+    .imgbox
+        overflow: hidden
+        position: relative
+        height: 35vw
+        padding: 0
+        li
+            @include circle
+            position: absolute
+            background-color: #B5A24C
+            transition: all 0.3s linear
+            img
+                width: 100%
+    i.angle.left
         position: absolute
-    :nth-child(5)
+        left: 2vw
+    i.angle.right
         position: absolute
-        left: 0.5rem
-    :nth-child(6)
-        position: absolute
-        right: 0.5rem
+        right: 2vw
+
+.group-box .imgbox .img1
+    opacity: 0.8
+    z-index: 0
+    left: calc(25% - 17.5vw)
+
+.group-box .imgbox .img2
+    opacity: 1
+    z-index: 1
+    left: calc(50% - 17.5vw)
+
+.group-box .imgbox .img3
+    opacity: 0.8
+    z-index: 0
+    left: calc(75% - 17.5vw)
+
+.group-box .imgbox .img-none
+    opacity: 0
+    z-index: 0
+    left: calc(50% - 17.5vw)
 
 .create-group-page, .join-group-page, .who-am-i-page
     @include jump-page($bg-color: #F6BF6A, $h: 90vh)
     h1
         font-size: 3rem
-        padding: 1vh
+        padding: 2vh
         margin: 0
-    i.arrow.left.icon
-        align-self: baseline
-        width: 2em
-        height: 2em
-        display: flex
-        align-items: center
-        justify-content: center
     button
         @extend %btn-style
-        margin: auto 0 10vw 0
+        margin: auto 0 4vh 0
         background-color: #AE6D0C
+
+.join-group-page, .who-am-i-page
+    height: 60vh
+    justify-content: space-between
+    button
+        margin: 0 0 4vh 0
+
+.title-with-icon
+    @include flex-center
+    width: 100%
+    i
+        @include circle($radi: 12vw)
+        @include flex-center
+        position: absolute
+        left: 5vw
+        background-color: white
+        color: #808080
 
 .create-pic, .who-am-i-pic
     @include flex-center
     @include circle($radi: 30vw)
     background-color: #FFF3E0
+    box-shadow: 0 0.2em 0.2em #00000059
     z-index: 10
 
 .create-container, .join-container, .who-am-i-container
@@ -127,18 +189,26 @@ body
     border-radius: 40px
     width: 75vw
     transform: translateY( -15vw )
-    padding: 15vw 10vw 10vw 10vw
+    padding: 15vw 7.5vw 7.5vw 7.5vw
     div
-        width: 55vw
+        width: 60vw
     h2
-        margin: 0.5em 0 !important
-        font-size: 1.7rem
+        margin: 0.35em 0 !important
+        font-size: 1.5rem
+        @media screen and (max-height: 750px)
+            margin: 0.2em 0 !important
     input, select
         @extend %input-style
         height: 12vw
         width: 100%
+        @media screen and (max-height: 750px)
+            height: 10vw
     select
         padding-left: 0.5rem
+
+.join-container
+    transform: none
+    padding: 7.5vw
 
 .create-two-input
     display: inline-flex
@@ -149,10 +219,6 @@ body
 .create-group-error-msg, .who-am-i-error-msg, .join-group-error-msg
     color: red
     transform: translateY(-14vw)
-
-.join-container
-    transform: none
-    margin: 15vw 0
 
 .who-am-i-container h2
     align-self: baseline

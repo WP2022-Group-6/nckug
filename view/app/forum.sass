@@ -1,0 +1,687 @@
+@import 'foundation'
+
+/*********************************************/
+/*     01. Section personal-setting-page     */
+/*********************************************/
+.personal-setting-page
+    display: flex
+    flex-direction: column
+    align-items: center
+    background-color: #FFF3E0
+    height: 100vh
+    color: white
+    h3
+        margin: 0
+    p
+        font-size: 1.5rem
+        font-weight: 600
+        margin: 0
+        color: #808080
+    button
+        @extend %btn-style
+        background-color: #B5A24C
+        width: 50vw
+        margin: 1vh
+    button:nth-child(8)
+        height: 10vw
+        width: 25vw
+        background-color: #808080
+        margin: auto 0 5vh
+
+.personal-setting-multi-btn
+    width: 100vw
+    display: flex
+    column-gap: 3vw
+    padding: 3vw
+    .personal-setting-two-btn
+        display: flex
+        flex-direction: column
+        row-gap: 3vw
+    .personal-setting-two-btn:nth-child(1)
+        width:30vw
+        div
+            @include flex-center($dir: column)
+            border-radius: 10px
+            padding: 3vw
+            row-gap: 2vw
+        div:nth-child(1)
+            height: 30vw
+            background-color: #605416
+            i
+                color: #b5a24c
+                transform: rotate(-25deg)
+        div:nth-child(2)
+            height: 30vw
+            background-color: #AE6D0C
+            i
+                color: #b5a24c
+                margin-left: 2vw
+
+    .personal-setting-two-btn:nth-child(2)
+        width:64vw
+        div:nth-child(1)
+            @include flex-center
+            justify-content: flex-start
+            border-radius: 10px
+            padding: 3vw
+            column-gap: 3vw
+            height: 15vw
+            background-color: #AE6D0C
+        div:nth-child(2)
+            border-radius: 10px
+            padding: 3vw
+            height: 45vw
+            background-color: #605416
+            div
+                height: auto
+                display: flex
+                flex-direction: row
+                column-gap: 3vw
+                div
+                    @include circle($radi: 10vw)
+                    background-color: White
+                p
+                    color: white
+
+.title-with-icon, .change-bank-bar, .change-password-bar, .group-setting-bar
+    @include flex-center
+    width: 100%
+    height: 11.4vh
+    background-color: #B5A24C
+    color: #605416
+    h1
+        margin: 0
+    i
+        @include circle($radi: 5vh)
+        @include flex-center
+        position: absolute
+        left: 0
+        top: 0
+        margin: 3.2vh 0 0 7vw
+        background-color: white
+        color: #808080
+
+.personal-setting-pic
+    @include flex-center
+    @include circle($radi: 20vw)
+    background-color: #808080
+    margin: 1vh
+    i
+        color: #FFF3E0
+
+/*******************************************************/
+/*     02. Section change-bank and change-password     */
+/*******************************************************/
+.change-bank-content, .change-password-content
+    @include flex-center($dir: column)
+    row-gap: 3vh
+    background-color: #FFF3E0
+    height: 88.6vh
+    padding: 10vh 0 5vh 0
+    color: #B5A24C
+    input
+        @extend %btn-style
+        box-shadow: none
+        color: white
+        width: 60vw
+        background-color: #B5A24C
+        padding: 0 3vw
+        &::placeholder
+            color: white
+        &:focus
+            outline: #605416 solid
+    button
+        @extend %btn-style
+        width: 30vw
+        background-color: #605416
+        margin: auto 0 0 0
+
+/******************************************/
+/*     03. Section group-chosing-page     */
+/******************************************/
+.group-chosing-content
+    background-color: #FFF3E0
+    button
+        @extend %btn-style
+        background-color: #B5A24C
+        position: fixed
+        bottom: 5vh
+        left: 30vw
+.group-box
+    display: flex
+    flex-direction: column
+    justify-content: center
+    width: 100vw
+    margin: 5vh 0
+    .imgbox
+        overflow: hidden
+        position: relative
+        height: 35vw
+        padding: 0
+        li
+            @include circle
+            position: absolute
+            background-color: #B5A24C
+            transition: all 0.3s linear
+            img
+                width: 100%
+    i.angle.left
+        position: absolute
+        left: 2vw
+    i.angle.right
+        position: absolute
+        right: 2vw
+
+.group-box .imgbox .img1
+    opacity: 0.8
+    z-index: 0
+    left: calc(25% - 17.5vw)
+
+.group-box .imgbox .img2
+    opacity: 1
+    z-index: 1
+    left: calc(50% - 17.5vw)
+
+.group-box .imgbox .img3
+    opacity: 0.8
+    z-index: 0
+    left: calc(75% - 17.5vw)
+
+.group-box .imgbox .img-none
+    opacity: 0
+    z-index: 0
+    left: calc(50% - 17.5vw)
+
+.group-info
+    width: 60vw
+    height: 35vh
+    margin: auto
+    border: 1vw dashed #808080
+    border-radius: 15px
+    background: linear-gradient(to bottom, #B5A24C 8vh, white 8vh) padding-box, linear-gradient(to bottom, #B5A24C 8.5vh, white 8.5vh) border-box
+    .group-title
+        height: 8vh
+        padding: 1vh 0
+        color: white
+        h3
+            @include flex-center
+            margin: 0
+            height: 3.5vh
+        p
+            @include flex-center
+            height: 2.5vh
+    .group-member
+        height: calc(27vh - 2vw)
+        overflow-y: auto
+        color: #808080
+        &::-webkit-scrollbar
+            display: none
+        h3
+            margin: 1.5vh
+            width: calc(36vw - 3vh)
+        div
+            display: flex
+            align-items: center
+            padding: 0 6vw
+            div
+                @include circle($radi: 10vw)
+                background-color: rgba(125, 125, 125, 0.9)
+                padding: 0
+
+/******************************************/
+/*     04. Section group-setting-page     */
+/******************************************/
+.group-setting-pic
+    @include flex-center($dir: column)
+    row-gap: 1vh
+    padding: 3vh
+    background-color: #FFF3E0
+    div
+        @include circle($radi: 40vw)
+        background-color: #F6BF6A
+    p
+        line-height: 2.5vh
+        text-align: center
+        padding: 1vh 6vw
+        font-weight: 600
+        border-radius: 15px
+        color: white
+        background-color: #F6BF6A
+
+.group-setting-choose, .group-basic-setting, .group-notice-setting
+    @include flex-center($dir: column)
+    justify-content: unset
+    row-gap: 3vh
+    background-color: #FFF3E0
+    height: calc(77.1vh - 40vw)
+    button
+        @extend %btn-style
+        box-shadow: none
+        background-color: #B5A24C
+        width: 60vw
+
+.group-basic-setting, .group-notice-setting
+    button
+        margin: auto 0 5vh
+        width: 30vw
+        background-color: #605416
+        box-shadow: 0 0.2em 0.2em #00000059
+    h2, select, input
+        border-radius: 15px
+        padding: 3vw
+        text-align: center
+        color: white
+        margin: 0
+    h2
+        background-color: #B5A24C
+        width: 65vw
+    select, input
+        background-color: #EFA159
+        width: 40vw
+        border: none
+        font-weight: 600
+        font-size: large
+        &::placeholder
+            color: white
+
+.group-add-setting
+    background-color: #FFF3E0
+    height: calc(77.1vh - 40vw)
+    overflow-y: auto
+    text-align: center
+    &::-webkit-scrollbar
+        display: none
+    div
+        display: inline-flex
+        justify-content: space-evenly
+        align-items: center
+        width: 60vw
+        height: 8vh
+        border-radius: 20px
+        background-color: #B5A24C
+        margin-bottom: 3vh
+        div
+            width: 12vw
+            height: 12vw
+            border-radius: 50%
+            background-color: #EFA159
+            margin: 0
+        h3
+            margin: 0
+            width: 40vw
+            color: white
+    .group-invite div
+        background-color: #E5E5E5
+
+/***************************************/
+/*     05. Section forum-main-page     */
+/***************************************/
+.forum-main-page
+    background-color: #FFF3E0
+    height: 100vh
+    color: #808080
+    overflow-y: auto
+    &::-webkit-scrollbar
+        display: none
+
+.forum-main-bar, .read-post-bar, .group-chosing-bar, .schedule-bar
+    @include flex-center
+    justify-content: space-between
+    height: 11.4vh
+    background-color: #B5A24C
+    position: fixed
+    width: 100vw
+    h1, h2
+        margin: 0
+        color: #605416
+        word-break: break-word
+        text-align: center
+        width: 55vw
+    i
+        @include flex-center
+        @include circle($radi: 5vh)
+        background-color: white
+    i:nth-child(1)
+        margin-left: 7vw
+    i:nth-child(3)
+        margin-right: 7vw
+
+.forum-main-posts
+    @include flex-center($dir: column)
+    .forum-main-post
+        border-radius: 10px
+        width: 80vw
+        padding: 1vh 5vw
+        background-color: white
+        margin: 1vh
+        box-shadow: 0 0.2em 0.2em #00000059
+        div
+            display: flex
+            align-items: center
+            column-gap: 3vw
+            line-height: 1
+            margin: 1.5vw 0
+            div
+                column-gap: 1vw
+                margin: 0
+            p
+                margin: 0
+    p, h3
+        margin: 1.5vw 0
+        word-wrap: break-word
+
+i.heart
+    color: #B54C4C
+i.bookmark
+    color: #F6BF6A
+i.comment
+    color: #0C74AE
+
+.forum-main-content, .read-post-content, .group-chosing-content
+    position: fixed
+    top: 11.4vh
+    width: 100vw
+    height: 88.6vh
+    overflow: auto
+    &::-webkit-scrollbar
+        display: none
+
+.forum-main-pic
+    display: flex
+    align-items: center
+    padding: 1vh 10vw
+    div
+        @include flex-center
+        @include circle($radi: 15vw)
+        background-color: #808080
+    h1
+        margin: 0
+        padding: 0 3vw
+
+.forum-main-fixed-i
+    display: flex
+    flex-direction: column
+    position: fixed
+    bottom: 0
+    right: 0
+    i
+        @include flex-center
+        @include circle($radi: 15vw)
+        background-color: #B5A24C
+        color: white
+        margin: 3vw
+
+/**************************************/
+/*     06. Section read-post-page     */
+/**************************************/
+.read-post-page
+    height: 100vh
+    color: #808080
+    background-color: #FFF3E0
+    word-break: break-word
+
+.read-post-main
+    padding: 1vh 5vw
+    background-color: #FFF3E0
+    h1
+        margin: 1rem 0
+
+.read-post-id
+    display: flex
+    align-items: center
+    column-gap: 3vw
+    div
+        @include circle($radi: 10vw)
+        background-color: #808080
+
+.read-post-message
+    background-color: white
+
+.read-post-message-bar
+    display: flex
+    column-gap: 3vw
+    line-height: 1
+    padding: 1vh 5vw
+    div
+        display: flex
+        align-items: center
+        column-gap: 1vw
+    .read-post-like
+        margin-left: auto
+
+.read-post-comment
+    padding: 1vh 5vw
+    border-top: 0.7vw solid rgba(128, 128, 128, 0.9)
+    .read-post-id
+        margin-bottom: 0.5vh
+
+.read-post-response
+    display: flex
+    align-items: center
+    position: fixed
+    bottom: 0
+    width: 100vw
+    height: 50px
+    padding: 0 5vw
+    background-color: #B5A24C
+    div
+        @include circle($radi: 10vw)
+        background-color: #808080
+    input
+        background-color: transparent
+        border: 0
+        width: 47vw
+        height: 40px
+        color: white
+        font-size: 1.2em
+        margin: 0 1.5vw
+        &::placeholder
+            color: white
+        &:focus
+            outline: none
+    i
+        width: 10vw
+        margin: 0
+    i.share.square
+        color: #0C74AE
+
+/*************************************/
+/*     07. Section schedule-page     */
+/*************************************/
+.schedule-content, .schedule-group-content
+    position: fixed
+    top: 11.4vh
+    width: 100vw
+    height: 88.6vh
+    overflow: auto
+    background-color: #FFF3E0
+    &::-webkit-scrollbar
+        display: none
+
+.schedule-group
+    width: 70vw
+    border: 1vw solid #AE6D0C
+    border-radius: 10px
+    text-align: center
+    background-color: white
+    margin: 15vw auto 0 auto
+
+.schedule-pic
+    @include circle($radi: 20vw)
+    position: absolute
+    transform: translate(24vw, -10vw)
+    background-color: #808080
+
+.schedule-name
+    @include flex-center($dir: column)
+    i
+        display: flex
+        justify-content: center
+        align-items: center
+        width: 7vw
+        height: 7vw
+        align-self: end
+        color: white
+        border-radius: 50%
+        margin: 1vw
+        background-color: #B5A24C
+    h3:nth-child(2)
+        color: #808080
+        margin: 3vw 0 0 0
+    h3:nth-child(3)
+        color: white
+        padding: 2vw 10vw
+        border-radius: 10px
+        margin: 2vw
+        background-color: #AE6D0C
+
+/*******************************************/
+/*     07. Section schedule-group-page     */
+/*******************************************/
+.schedule-group-bar
+    @include flex-center
+    justify-content: space-between
+    height: 11.4vh
+    background-color: #B5A24C
+    position: fixed
+    width: 100vw
+    i
+        @include flex-center
+        @include circle($radi: 5vh)
+        background-color: white
+    i:nth-child(1)
+        margin-left: 7vw
+    i:nth-child(2)
+        margin-right: 7vw
+
+.schedule-group-pic
+    @include flex-center($dir: column)
+    color: #808080
+    position: fixed
+    left: 35vw
+    top: calc(11.4vh - 15vw)
+    div
+        @include circle($radi: 30vw)
+        background-color: #808080
+    h3
+        @include flex-center
+        height: 10vw
+        margin: 0
+
+.schedule-group-content
+    padding: 27vw 8vw
+    i.plus
+        @include circle($radi: 15vw)
+        @include flex-center
+        color: #B5A24C
+        border: 1vw solid #B5A24C
+        background-color: white
+        margin: auto
+        box-shadow: 0 0.2em 0.2em #00000059
+
+.schedule-group-day
+    width: 30vw
+    padding: 2vw
+    color: white
+    border-radius: 10px
+    margin: 0 0 2vh 0
+    text-align: center
+    background-color: #AE6D0C
+    box-shadow: 0 0.2em 0.2em #00000059
+
+.schedule-group-item
+    width: 80vw
+    border: 1vw solid #EFA159
+    border-radius: 10px
+    margin: 0 auto 2vh auto
+    background-color: white
+    box-shadow: 0 0.2em 0.2em #00000059
+    i.ellipsis
+        @include flex-center
+        @include circle($radi: 7vw)
+        position: absolute
+        right: 8vw
+        background-color: #B5A24C
+        color: white
+        transform: translateY(-3vw)
+        margin: 0
+    h3
+        margin: 0
+        color: #808080
+    div:nth-child(1)
+        position: absolute
+        display: flex
+        right: 3.5vw
+        transform: translateY(-10vw)
+        column-gap: 2vw
+        i.trash, i.edit
+            @include flex-center
+            @include circle($radi: 7vw)
+            background-color: #B5A24C
+            color: white
+            margin: 0
+    div:nth-child(3)
+        display: flex
+        align-items: center
+        padding: 2vw
+        column-gap: 2vw
+        h3:nth-child(1)
+            width: 20vw
+            text-align: center
+            padding: 1vw
+            border-radius: 10px
+            color: white
+            background-color: #B54C4C
+        h3:nth-child(2)
+            width: 52vw
+            text-align: center
+
+.schedule-group-note
+    padding: 2vw
+    text-align: center
+    border-top: 1vw dashed #EFA159
+
+/************************************/
+/*     08. Section schedule-add     */
+/************************************/
+.schedule-add
+    @include jump-page($bg-color: #B5A24C, $h: 50vh)
+    row-gap: 2vh
+    color: white
+    padding: 2vh 8vw
+    h3
+        margin: 1vw 0
+    input
+        width: 100%
+        height: 5vh
+        border: 0
+        border-radius: 10px
+        box-shadow: 0 0.2em 0.2em #00000059
+        color: #B5A24C
+        font-size: initial
+        padding-left: 2vw
+        &:focus
+            outline: #605416 solid
+    div
+        width: 100%
+    button
+        @extend %btn-style
+        background-color: #605416
+
+.schedule-add-title
+    display: flex
+    justify-content: space-between
+    i
+        @include circle($radi: 7vw)
+        @include flex-center
+        color: #B5A24C
+        background-color: white
+
+.schedule-add-two
+    display: flex
+    div:nth-child(1)
+        margin-right: 1vw
+        width: 60%
+    div:nth-child(2)
+        margin-left: 1vw
+        width: 40%

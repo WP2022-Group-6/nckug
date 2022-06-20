@@ -1,12 +1,27 @@
 let userId = 0
 let groupId = 0
 
-$('.entrance-btn').click((event) => {
+// 初始頁面btn
+$('.entrance-btn button:nth-child(1)').click((event) => {
     event.preventDefault()
     $('.login-page').transition('slide up')
+    $('.entrance-title').css('transform', 'translateY(-8vh)')
 })
 
-$('.login-btn').click((event) => {
+$('.entrance-btn button:nth-child(3)').click((event) => {
+    event.preventDefault()
+    $('.sign-up-page').transition('slide up')
+    $('.entrance-title').css('transform', 'translateY(-15vh)')
+})
+
+// 登入頁面btn
+$('.login-page i').click((event) => {
+    event.preventDefault()
+    $('.login-page').transition('slide up')
+    $('.entrance-title').css('transform', 'none')
+})
+
+$('.login-page button').click((event) => {
     event.preventDefault()
     if ($('.login-page input[name=email]').val() === '' || $('.login-page input[name=pwd]').val() === '') {
         $('.login-error-msg').html('Please Enter Your Email And Password.')
@@ -35,14 +50,17 @@ $('.login-btn').click((event) => {
     }
 })
 
+// 註冊頁面btn
+$('.sign-up-page i').click((event) => {
+    event.preventDefault()
+    $('.sign-up-page').transition('slide up')
+    $('.entrance-title').css('transform', 'none')
+})
+
+// 選擇群組頁面btn
 $('.choose-group-create').click(() => {
     $('.choose-group-page').transition('slide up')
     $('.create-group-page').transition('slide up')
-})
-
-$('.create-group-page .arrow.left.icon').click(() => {
-    $('.create-group-page').transition('slide up')
-    $('.choose-group-page').transition('slide up')
 })
 
 $('.choose-group-join').click(() => {
@@ -50,11 +68,32 @@ $('.choose-group-join').click(() => {
     $('.join-group-page').transition('slide up')
 })
 
-$('.join-group-page .arrow.left.icon').click(() => {
-    $('.join-group-page').transition('slide up')
+classArr = ['img1', 'img2', 'img3', 'img-none', 'img-none']
+$('.group-box i.left').click(() => {
+    let firstValue = classArr.shift()
+    classArr.push(firstValue)
+    let img =  $('.imgbox').children()
+    for(let i = 0; i < classArr.length; i++) {
+        img[i].className = classArr[i]
+    }
+})
+
+$('.group-box i.right').click(() => {
+    let lastValue = classArr.pop()
+    classArr.unshift(lastValue)
+    let img =  $('.imgbox').children()
+    for(let i = 0; i < classArr.length; i++) {
+        img[i].className = classArr[i]
+    }
+})
+
+// 創立群組頁面btn
+$('.create-group-page .chevron.left.icon').click(() => {
+    $('.create-group-page').transition('slide up')
     $('.choose-group-page').transition('slide up')
 })
 
+//新增輸入框尚未更改
 let groupName, groupCurrency, groupKind, groupBalance
 $('.create-group-page button').click((event) => {
     event.preventDefault()
@@ -70,6 +109,12 @@ $('.create-group-page button').click((event) => {
         $('.who-am-i-page button').text('創立群組')
         $('.who-am-i-page').transition('slide up')
     }
+})
+
+// 加入群組頁面btn
+$('.join-group-page .chevron.left.icon').click(() => {
+    $('.join-group-page').transition('slide up')
+    $('.choose-group-page').transition('slide up')
 })
 
 let verifyCode, invitationCode
@@ -98,7 +143,8 @@ $('.join-group-page button').click((event) => {
     }
 })
 
-$('.who-am-i-page .arrow.left.icon').click(() => {
+// 我是誰頁面btn
+$('.who-am-i-page .chevron.left.icon').click(() => {
     $('.who-am-i-page').transition('slide up')
     if ($('.who-am-i-page button').text() == '加入群組') {
         $('.join-group-page').transition('slide up')
