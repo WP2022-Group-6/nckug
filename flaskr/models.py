@@ -1003,19 +1003,18 @@ class Journey(db.Model):
 
     _id = db.Column(db.Integer, primary_key=True)
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
-    _datatime = db.Column(db.DateTime, nullable=False, unique=False)
+    _datetime = db.Column(db.DateTime, nullable=False, unique=False)
     _place = db.Column(db.String, nullable=False, unique=False)
     _note = db.Column(db.Text, nullable=False, unique=False)
 
-    def __init__(self, group_id, datatime, day, place, note) -> None:
+    def __init__(self, group_id, datetime, place, note) -> None:
         self._group_id = group_id
-        self._datatime = datatime
-        self._day = day
+        self._datetime = datetime
         self._place = place
         self._note = note
 
     def __repr__(self) -> str:
-        return '<Journey of Group {} at {}>'.format(self._group_id, self._datatime)
+        return '<Journey of Group {} at {}>'.format(self._group_id, self._datetime)
 
     @property
     def id(self) -> int:
@@ -1031,12 +1030,12 @@ class Journey(db.Model):
         DatabaseManager.update()
 
     @property
-    def datatime(self) -> datetime:
-        return self._datatime
+    def datetime(self) -> datetime:
+        return self._datetime
 
-    @datatime.setter
-    def datatime(self, value) -> None:
-        self._datatime = value
+    @datetime.setter
+    def datetime(self, value) -> None:
+        self._datetime = value
         DatabaseManager.update()
 
     @property
@@ -1061,7 +1060,7 @@ class Journey(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, datatime, day, place, note) -> Journey:
-        journey = cls(group_id, datatime, day, place, note)
+    def create(cls, group_id, datetime, place, note) -> Journey:
+        journey = cls(group_id, datetime, place, note)
         DatabaseManager.create(journey)
         return journey

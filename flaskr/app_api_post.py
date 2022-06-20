@@ -12,12 +12,6 @@ def isempty(*args: str) -> bool:
     return False
 
 
-def istrue(arg: str) -> bool:
-    if arg == str(True):
-        return True
-    return False
-
-
 @app.route('/api/post/new-post', methods=['POST'])
 @login_required
 def new_post():
@@ -39,22 +33,17 @@ def new_post():
 @login_required
 def get_post():
     amount = request.args.get('amount', None)
-    collection = request.args.get('collection', None)
+    collection = request.args.get('collection', '')
 
     if amount:
         try:
             amount = int(amount)
         except:
             abort(400)
-    if collection:
-        if collection in ['True', 'False']:
-            collection = istrue(collection)
-        else:
-            abort(400)
 
     data = []
 
-    if not collection:
+    if collection != 'True':
         amount_count = 0
         for post in (Post.query.all() or []):
             like_amount = Like.query.filter_by(_post_id=post.id).count()
@@ -102,34 +91,23 @@ def get_post():
 @login_required
 def new_response():
     post_id = request.values.get('post_id', '')
-    like = request.values.get('like', None)
-    collection = request.values.get('collection', None)
+    like = request.values.get('like', '')
+    collection = request.values.get('collection', '')
 
-    if like:
-        if like in ['True', 'False']:
-            like = istrue(like)
-        else:
-            abort(400)
-    elif collection:
-        if collection in ['True', 'False']:
-            collection = istrue(collection)
-        else:
-            abort(400)
-    else:
-        abort(400)
     try:
         post_id = int(post_id)
     except:
         abort(400)
 
     data = False
-    if like:
+
+    if like == 'True':
         exist = Like.query.filter_by(_post_id=post_id, _user_id=current_user.id).first()
         print(exist == None)
         if exist == None:
             Like.create(post_id=post_id, user_id=current_user.id)
             data = True
-    if collection:
+    if collection == 'True':
         exist = Collection.query.filter_by(_post_id=post_id, _user_id=current_user.id).first()
         print(exist == None)
         if exist == None:

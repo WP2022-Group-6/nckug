@@ -28,10 +28,12 @@ def create_group():
     currency = request.values.get('currency', '')
     first_remittance = request.values.get('first_remittance', '')
     top_up_each_time = request.values.get('top_up_each_time', '')
+    min_balance = request.values.get('min_balance', '')
 
     try:
         first_remittance = int(first_remittance)
         top_up_each_time = int(top_up_each_time)
+        min_balance = int(min_balance)
     except:
         abort(400)
 
@@ -41,7 +43,7 @@ def create_group():
     data = {'group_id': None}
 
     group = Group.create(name=group_name, type=type, payment=first_remittance, top_up_each_time=top_up_each_time,
-                         owner_id=current_user.id, currency=currency)
+                         min_balance=min_balance, owner_id=current_user.id, currency=currency)
     UserGroup.create(user_id=current_user.id, group_id=group.id, nickname=nickname)
     data['group_id'] = group.id
 
@@ -96,8 +98,8 @@ def get_group_info():
     if isNone(group):
         abort(400)
 
-    data = {'group_name': group.name, 'type': group.type, 'invite_code': group.invitation_code,
-            'balance': 0, 'currency': group.currency, 'owner_id': group.owner_id, 'member': list()}
+    data = {'group_name': group.name, 'type': group.type, 'invite_code': group.invitation_code, 'balance': 0, 'currency': group.currency, 'owner_id': group.owner_id,
+            'first_remittance': group.payment, 'top_up_each_time': group.top_up_each_time, 'min_balance': group.min_balance, 'member': list()}
 
     for user_group in (UserGroup.query.filter_by(_group_id=group.id).all() or []):
         user_info = {'user_id': user_group.user_id,
@@ -111,27 +113,32 @@ def get_group_info():
 @app.route('/api/user/set-personal-info', methods=['POST'])
 @login_required
 def set_personal_info():
-    nickname = request.values.get('nickname', '')
-    group_id = request.values.get('group_id', '')
-
-    if isempty(nickname):
-        abort(400)
+    password = request.values.get('password', None)
+    bank_code = request.values.get('bank_code', None)
+    account = request.values.get('account', None)
+    delete_account = request.values.get('delete_accoun', '')
 
     data = False
 
-    if isempty(group_id):
-        current_user.name = nickname
+    user = User.query.filter_by(_id=current_user.id).first()
+    if delete_account == 'True':
+        user.remove()
         data = True
     else:
-        try:
-            group_id = int(group_id)
-            get_usergroup = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
-        except:
-            abort(400)
-
-        if get_usergroup is not None:
-            get_usergroup.user_name = nickname
-            data = True
+        if user is not None:
+            if password:
+                user.set_password(password)
+                data = True
+            if bank_code:
+                try:
+                    bank_code = int(bank_code)
+                except:
+                    abort(400)
+                user.bank_code = bank_code
+                data = True
+            if account:
+                user.account = account
+                data = True
 
     return jsonify(data)
 
@@ -191,5 +198,45 @@ def remittance_finished():
         data = True
     else:
         data = False
+
+    return jsonify(data)
+
+
+@app.route('/api/group/set-group-info', methods=['POST'])
+@login_required
+def set_group_info():
+    group_id = request.values.get('group_id', '')
+    type = request.values.get('type', None)
+    currency = request.values.get('currency', None)
+    top_up_each_time = request.values.get('top_up_each_time', None)
+    min_balance = request.values.get('min_balance', None)
+
+    try:
+        group_id = int(group_id)
+    except:
+        abort(400)
+    data = False
+    group = Group.query.filter_by(_id=group_id).first()
+    if group:
+        if type:
+            group.type = type
+            data = True
+        if currency:
+            group.currency = currency
+            data = True
+        if top_up_each_time:
+            try:
+                top_up_each_time = int(top_up_each_time)
+            except:
+                abort(400)
+            group.top_up_each_time = top_up_each_time
+            data = True
+        if min_balance:
+            try:
+                min_balance = int(min_balance)
+            except:
+                abort(400)
+            group.min_balance = min_balance
+            data = True
 
     return jsonify(data)

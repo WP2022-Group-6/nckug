@@ -15,7 +15,8 @@ def isempty(*args: str) -> bool:
 @app.route('/api/user/get-user-info', methods=['GET'])
 @login_required
 def get_user_info():
-    data = {'name': current_user.name, 'email': current_user.email, 'group': []}
+    data = {'name': current_user.name, 'email': current_user.email,
+            'bank_code': current_user.bank_code, 'account': current_user.account, 'group': []}
 
     for user_group in (UserGroup.query.filter_by(_user_id=current_user.id).all() or []):
         group = Group.query.get(user_group.group_id)

@@ -1,5 +1,5 @@
 from flaskr import app
-from flaskr import app_api_auth, app_api_user, app_api_group, app_api_transaction, app_api_post
+from flaskr import app_api_auth, app_api_user, app_api_group, app_api_transaction, app_api_post, app_api_journey
 from flaskr.models import db
 
 
