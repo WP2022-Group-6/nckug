@@ -55,12 +55,16 @@ class User(db.Model, UserMixin):
     _password_hash = db.Column(db.String, nullable=False, unique=False)
     _email = db.Column(db.String, nullable=False, unique=True)
     _picture = db.Column(db.Text, nullable=True, unique=False)
+    _bank_code = db.Column(db.Integer, nullable=True, unique=False)
+    _account = db.Column(db.String, nullable=True, unique=False)
 
-    def __init__(self, name, password_hash, email, picture) -> None:
+    def __init__(self, name, password_hash, email, picture, bank_code, account) -> None:
         self._name = name
         self._password_hash = password_hash
         self._email = email
         self._picture = picture
+        self._bank_code = bank_code
+        self._account = account
 
     def __repr__(self) -> str:
         return '<User {} {}>'.format(self._name, self._email)
@@ -103,6 +107,24 @@ class User(db.Model, UserMixin):
         self._picture = value
         DatabaseManager.update()
 
+    @property
+    def bank_code(self) -> int:
+        return self._bank_code
+
+    @bank_code.setter
+    def bank_code(self, value) -> None:
+        self._bank_code = value
+        DatabaseManager.update()
+
+    @property
+    def account(self) -> str:
+        return self._account
+
+    @account.setter
+    def account(self, value) -> None:
+        self._account = value
+        DatabaseManager.update()
+
     def remove(self) -> bool:
         for group_user in UserGroup.query.filter_by(_user_id=self.id).all():
             group_user.remove()
@@ -121,14 +143,16 @@ class User(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, name, email, password=None, password_hash=None, picture=None) -> User:
+    def create(cls, name, email, password=None, password_hash=None, picture=None, bank_code=None, account=None) -> User:
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the database.')
         if password_hash:
-            user = cls(name=name, password_hash=password_hash, email=email, picture=picture)
+            user = cls(name=name, password_hash=password_hash, email=email,
+                       picture=picture, bank_code=bank_code, account=account)
         elif password:
             password_hash = password
-            user = cls(name=name, password_hash=password_hash, email=email, picture=picture)
+            user = cls(name=name, password_hash=password_hash, email=email,
+                       picture=picture, bank_code=bank_code, account=account)
         else:
             raise ValueError('User cannot be created without password.')
         DatabaseManager.create(user)
@@ -247,18 +271,20 @@ class Group(db.Model):
     _type = db.Column(db.String, nullable=False, unique=False)
     _payment = db.Column(db.Integer, nullable=False, unique=False)
     _top_up_each_time = db.Column(db.Integer, nullable=False, unique=False)
+    _min_balance = db.Column(db.Integer, nullable=False, unique=False)
     _owner_id = db.Column(db.Integer, nullable=False, unique=False)
     _currency = db.Column(db.String, nullable=False, unique=False)
     _invitation_code = db.Column(db.String, nullable=False, unique=True)
     _verification = db.Column(db.String, nullable=False, unique=False)
     _picture = db.Column(db.Text, nullable=True, unique=False)
 
-    def __init__(self, name: str, type: str, payment: int, top_up_each_time: int, owner_id: int, currency: str,
+    def __init__(self, name: str, type: str, payment: int, top_up_each_time: int, min_balance: int, owner_id: int, currency: str,
                  invitation_code: str, verification: str, picture: Union[str, None]) -> None:
         self._name = name
         self._type = type
         self._payment = payment
         self._top_up_each_time = top_up_each_time
+        self._min_balance = min_balance
         self._owner_id = owner_id
         self._currency = currency
         self._invitation_code = invitation_code
@@ -306,6 +332,15 @@ class Group(db.Model):
     @top_up_each_time.setter
     def top_up_each_time(self, value) -> None:
         self._top_up_each_time = value
+        DatabaseManager.update()
+
+    @property
+    def min_balance(self) -> int:
+        return self._min_balance
+
+    @min_balance.setter
+    def min_balance(self, value) -> None:
+        self._min_balance = value
         DatabaseManager.update()
 
     @property
@@ -363,13 +398,13 @@ class Group(db.Model):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, name: str, type: str, payment: int, top_up_each_time: int, owner_id: int, currency: str,
+    def create(cls, name: str, type: str, payment: int, top_up_each_time: int, min_balance: int, owner_id: int, currency: str,
                picture: Union[str, None] = None) -> Group:
         invitation_code = gen_random_text(length=6, digit=True)
         verification_code = gen_random_text(length=10, digit=True, letter=True)
         while Group.query.filter_by(_invitation_code=invitation_code).first():
             invitation_code = gen_random_text(length=6, digit=True)
-        group = cls(name=name, type=type, payment=payment, top_up_each_time=top_up_each_time, owner_id=owner_id,
+        group = cls(name=name, type=type, payment=payment, top_up_each_time=top_up_each_time, min_balance=min_balance, owner_id=owner_id,
                     currency=currency, invitation_code=invitation_code, verification=verification_code, picture=picture)
         DatabaseManager.create(group)
         return group
@@ -969,14 +1004,15 @@ class Journey(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     _group_id = db.Column(db.Integer, nullable=False, unique=False)
     _datatime = db.Column(db.DateTime, nullable=False, unique=False)
-    _day = db.Column(db.Integer, nullable=False, unique=False)
-    _remark = db.Column(db.String, nullable=False, unique=False)
+    _place = db.Column(db.String, nullable=False, unique=False)
+    _note = db.Column(db.Text, nullable=False, unique=False)
 
-    def __init__(self, group_id, datatime, day, remark) -> None:
+    def __init__(self, group_id, datatime, day, place, note) -> None:
         self._group_id = group_id
         self._datatime = datatime
         self._day = day
-        self._remark = remark
+        self._place = place
+        self._note = note
 
     def __repr__(self) -> str:
         return '<Journey of Group {} at {}>'.format(self._group_id, self._datatime)
@@ -1004,28 +1040,28 @@ class Journey(db.Model):
         DatabaseManager.update()
 
     @property
-    def day(self) -> int:
-        return self._day
+    def place(self) -> str:
+        return self._place
 
-    @day.setter
-    def day(self, value) -> None:
-        self._day = value
+    @place.setter
+    def place(self, value) -> None:
+        self._place = value
         DatabaseManager.update()
 
     @property
-    def remark(self) -> str:
-        return self._remark
+    def note(self) -> str:
+        return self._note
 
-    @remark.setter
-    def remark(self, value) -> None:
-        self._remark = value
+    @note.setter
+    def note(self, value) -> None:
+        self._note = value
         DatabaseManager.update()
 
     def remove(self) -> bool:
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, group_id, datatime, day, remark) -> Journey:
-        journey = cls(group_id, datatime, day, remark)
+    def create(cls, group_id, datatime, day, place, note) -> Journey:
+        journey = cls(group_id, datatime, day, place, note)
         DatabaseManager.create(journey)
         return journey
