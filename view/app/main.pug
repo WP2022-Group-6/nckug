@@ -3,6 +3,7 @@ html
   head
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(rel="icon" href="../image/favicon.svg" type="image/x-icon")
     title Team Debit
 
     // Third Party CSS
@@ -169,9 +170,9 @@ html
           h3 金額
       .add-event-image
         i.big.image.icon
-      section.add-event-content
-        .add-event-comment
+      .add-event-comment
           i.big.comment.alternate.outline.icon
+      section.add-event-content
         h2 類型
         select(name='event-kind')
           option(value='food') 食物
@@ -183,21 +184,33 @@ html
         h2 備註
         input(type="text" name='event-memo')
         h2 付款人
-        div
+        .add-event-content-div
           .paid-people
             div
-          i.big.caret.down.icon
+          i.big.caret.down.icon.paid-people-btn
         h2 分帳人
-        div
+        .add-event-content-div
           .split-people
             div
             div
           i.big.caret.down.icon.split-people-btn
-        .add-event-content-error-msg
+        .add-event-content-error-msg.add-event-content-div
         button.add-event-save 儲存
-        .add-event-agreement.transition.hidden
+        .add-event-agreement
           button 同意
           button 不同意
+
+      // 付款人選擇頁面
+      section.paid-account.transition.hidden
+        .paid-account-content
+          h2 選擇付款人
+          .paid-record
+            each val in [1, 2, 3]
+              div.paid-select
+                div
+                h3 名稱
+        .paid-account-error-msg
+        button 確定
 
       // 分帳方式頁面
       section.split-account.transition.hidden
@@ -242,12 +255,13 @@ html
       // 不同意頁面
       section.denial-reason-page.transition.hidden
         h2 支出項目
-        input(type="text")
+        input(type="text" name="event-name" readonly="readonly")
         h1 不同意
         .denial-container
           h3 總金額輸入錯誤
           h3 分帳金額錯誤
-          input(placeholder="其他備註")
+          h3 其他
+          // input(placeholder="其他備註")
 
     // 結算畫面
     section.close-account-page.transition.hidden
@@ -312,28 +326,29 @@ html
     section.side-menu-page.transition.hidden
       .side-menu-block
       .side-menu-content
-        div
+        .side-menu-choose-group
           div
             h1 選擇群組
           h3 所有群組
-          h3 群組A
-          h3 群組B
-        div
+          // h3 群組A
+          // h3 群組B
+        .side-menu-group-setting
           div
             h1 群組設定
           h3 群組管理
-        div
+        .side-menu-schedule
           div
             h1 行程規劃
           h3 行程安排
           h3 論壇區
-        div
+        .side-menu-personal-setting
           div
             h1 個人設定
           h3 帳號設定
           h3 登出
 
     // JavaScript
+    script(src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js")
     script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js")

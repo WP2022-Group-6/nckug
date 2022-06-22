@@ -324,7 +324,7 @@
     &::-webkit-scrollbar
         display: none
 
-.forum-main-bar, .read-post-bar, .group-chosing-bar, .schedule-bar
+.forum-main-bar, .read-post-bar, .group-chosing-bar, .schedule-bar, .edit-post-bar
     @include flex-center
     justify-content: space-between
     height: 11.4vh
@@ -377,7 +377,7 @@ i.bookmark
 i.comment
     color: #0C74AE
 
-.forum-main-content, .read-post-content, .group-chosing-content
+.forum-main-content, .read-post-content, .group-chosing-content, .edit-post-content
     position: fixed
     top: 11.4vh
     width: 100vw
@@ -414,19 +414,43 @@ i.comment
 /**************************************/
 /*     06. Section read-post-page     */
 /**************************************/
-.read-post-page
+.edit-post-content
+    input, textarea
+        width: 100%
+        background-color: transparent
+        border: 0
+        padding: 2vw 0
+        &:focus
+            outline: none
+    input
+        font-size: x-large
+        font-weight: 600
+    textarea
+        height: 70vh
+        font-size: 16px
+
+.read-post-main textarea
+    width: 100%
+    font-size: 16px
+    background-color: transparent
+    border: 0
+    padding: 10px 0
+    &:focus
+        outline: none
+
+.read-post-page, .edit-post-page
     height: 100vh
     color: #808080
     background-color: #FFF3E0
     word-break: break-word
 
-.read-post-main
+.read-post-main, .edit-post-main
     padding: 1vh 5vw
     background-color: #FFF3E0
     h1
         margin: 1rem 0
 
-.read-post-id
+.read-post-id, .edit-post-id, .read-post-comment-id
     display: flex
     align-items: center
     column-gap: 3vw
@@ -464,6 +488,13 @@ i.comment
     height: 50px
     padding: 0 5vw
     background-color: #B5A24C
+    button
+        background-color: transparent
+        border: 0
+        width: 3em
+        height: 100%
+        font-weight: 600
+        font-size: initial
     div
         @include circle($radi: 10vw)
         background-color: #808080
@@ -685,3 +716,72 @@ i.comment
     div:nth-child(2)
         margin-left: 1vw
         width: 40%
+
+/**************************************/
+/*     09. Section side-menu-page     */
+/**************************************/
+.side-menu-page, .side-menu-block, .side-menu-content
+    position: fixed
+    top: 0
+    left: 0
+    width: 100vw
+    height: 100vh
+    z-index: 100
+
+.side-menu-content
+    width: 50vw
+    background-color: rgba(181, 162, 76, 0.9)
+    border-radius: 0 25px 25px 0
+    padding: 3vh 6vw
+    color: white
+    div
+        margin: 2vh 0
+        div
+            width: 27vw
+            border-radius: 20px
+            height: 11vw
+            white-space: nowrap
+            padding-left: 2vw
+            display: flex
+            align-items: center
+    h3
+        margin: 2vw 1vh
+    div:nth-child(1) div
+        background-color: #798337
+    div:nth-child(2) div
+        background-color: #B54C4C
+    div:nth-child(3) div
+        background-color: #263cb8
+    div:nth-child(4) div
+        background-color: #AE6D0C
+
+/********************************************/
+/*     10. Section send-invitation-page     */
+/********************************************/
+.send-invitation-page
+    @include jump-page($bg-color: #FFF3E0, $h: 98.5vh)
+    color: #808080
+    z-index: 10
+    i.close
+        align-self: end
+        margin: 5vw 5vw 0 0
+    h1
+        font-size: 3rem
+        margin: 0 0 2vh 0
+    p
+        font-size: 1.3rem
+        font-weight: 600
+        margin: 2vw
+    button
+        @extend %btn-style
+        margin: 5vw
+    div
+        padding: 5vh 0
+        h3
+            margin: 2vw
+            font-size: 1.7rem
+            &:nth-child(2), &:nth-child(4)
+                width: 60vw
+                background-color: #c4c4c4
+                border-radius: 10px
+                padding: 1vw 3vw

@@ -522,6 +522,7 @@ body
     border-radius: 0 0 0 100%
     bottom: calc(75vh - 15vw)
     background-color: #AE6D0C
+    z-index: 100
     i
         color: white
 
@@ -544,21 +545,24 @@ body
     button
         @extend %btn-style
         align-self: center
-        margin: 0 0 5vh 0
-    div
-        display: inline-flex
-        align-items: center
-        i.caret.down
-            @include flex-center
-            margin-left: auto
-            border-radius: 10px
-            background-color: #F6BF6A
-            width: 7vw
-            height: 8vw
+        margin: 0 0 2vw 0
+
+.add-event-content-div
+    display: inline-flex
+    align-items: center
+    i.caret.down
+        @include flex-center
+        margin-left: auto
+        border-radius: 10px
+        background-color: #F6BF6A
+        width: 7vw
+        height: 8vw
 
 .add-event-agreement
+    display: inline-flex
     column-gap: 5vw
     justify-content: center
+    align-items: center
     button
         width: 35vw
     button:nth-child(1)
@@ -583,7 +587,7 @@ body
 /***************************************/
 /*     09-2. Section split-account     */
 /***************************************/
-.split-account button
+.split-account button, .paid-account button
     @extend %btn-style
     align-self: center
     margin: auto 0 10vh 0
@@ -610,7 +614,7 @@ body
         border: 0 !important
         background-color: transparent !important
 
-.split-account-content
+.split-account-content, .paid-account-content
     padding: 1vh 10vw
 
 .split-content-depiction
@@ -630,7 +634,7 @@ body
         h3
             margin-left: 1vw
 
-.split-record
+.split-record, .paid-record
     display: flex
     flex-direction: column
     align-items: flex-end
@@ -661,7 +665,7 @@ body
                 transform: translateY(-0.5rem)
                 white-space: normal
 
-.split-account-error-msg
+.split-account-error-msg, .paid-account-error-msg
     align-self: center
     color: red
 
@@ -709,6 +713,8 @@ body
         p:nth-child(1)
             margin: 0
         p:nth-child(2)
+            word-break: break-all
+            width: fit-content
             background-color: white
             border: 1.1vw solid #EFA159
             border-radius: 8px
@@ -732,7 +738,7 @@ body
         background-color: white
         border: 1.1vw solid #808080
         border-radius: 8px
-        padding: 0.5vw 2vw
+        padding: 0.5vw 14vw 0.5vw 2vw
         width: 77vw
         font-weight: 600
     input[type="button"]

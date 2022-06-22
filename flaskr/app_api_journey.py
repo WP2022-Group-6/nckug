@@ -1,9 +1,8 @@
-from tokenize import group
 from flask import abort, jsonify, request
 from flask_login import login_required, current_user
 
 from flaskr.models import User, UsersWithoutVerify, Group, UserGroup, Transaction, UserTransaction, TransactionMessage, Post, PostComment, Like, Collection, Journey
-from flaskr import app
+from flaskr import app, socketio
 from datetime import date, datetime, timedelta
 
 
@@ -13,10 +12,11 @@ def isempty(*args: str) -> bool:
             return True
     return False
 
+
 @app.route('/api/journey/set-journey', methods=['POST'])
 @login_required
 def set_journey():
-    journey_id = request.values.get('journey_id', None)
+    journey_id = request.values.get('journey_id', '')
     group_id = request.values.get('group_id', '')
     date = request.values.get('date', '')
     time = request.values.get('time', '')
@@ -24,83 +24,74 @@ def set_journey():
     note = request.values.get('note', '')
     delete = request.values.get('delete', '')
 
-    if delete == 'True':
-        try:
-            journey_id = int(journey_id)
-        except:
-            abort(400)
-    else:
-        if isempty(date, time, place):
-            abort(400)
-        try:
-            group_id = int(group_id)
-            date_time = datetime.fromisoformat(date + ' ' + time)
-            if journey_id is not None:
-                journey_id = int(journey_id)
-        except:
-            abort(400)
-
-    data = False
-    if delete == 'True':
-        journey = Journey.query.filter_by(_id=journey_id).first()
-        if journey is not None:
-            journey.remove()
-            data = True
-    else:
-        if journey_id is None:
-            journey = Journey.create(group_id=group_id, datetime=date_time, place=place, note=note)
-            data = True
+    try:
+        journey_id = int(journey_id) if not isempty(journey_id) else None
+        group_id = int(group_id) if not isempty(group_id) else None
+        date_time = datetime.fromisoformat('{} {}'.format(date, time)) if not isempty(date, time) else None
+        delete = (delete == 'True')
+        journey = Journey.query.get(journey_id) if journey_id else None
+        group = Group.query.get(group_id) if group_id else None
+        if journey:
+            user_group = UserGroup.query.filter_by(_group_id=journey.group_id, _user_id=current_user.id).first()
+        elif group:
+            user_group = UserGroup.query.filter_by(_group_id=group.id, _user_id=current_user.id).first()
         else:
-            journey = Journey.query.get(journey_id)
-            journey.datetime = date_time
-            journey.place = place
-            journey.note = note
-            data = True
+            user_group = None
+    except:
+        abort(400)
 
-    return jsonify(data)
+    if user_group is None or (not delete and isempty(place, note)):
+        abort(400)
+
+    if journey and delete:
+        journey.remove()
+    elif journey:
+        journey.datetime = date_time
+        journey.place = place
+        journey.note = note
+    else:
+        journey = Journey.create(group_id=group_id, datetime=date_time, place=place, note=note)
+
+    socketio.emit('update')
+
+    return jsonify(True)
 
 
 @app.route('/api/journey/get-journey', methods=['GET'])
 @login_required
 def get_journey():
     group_id = request.args.get('group_id', '')
-    day = request.args.get('day', None)
 
     try:
         group_id = int(group_id)
-        if day is not None:
-            day = int(day)
+        group = Group.query.get(group_id)
+        user_group = UserGroup.query.filter_by(_group_id=group.id, _user_id=current_user.id).first()
     except:
         abort(400)
 
+    if not user_group:
+        abort(400)
+
     data = list()
+    temp = dict()
 
-    count = 0
-    first = True
-    last_date = date
-    latest_date = date
-    day_info = {'date': '', 'day': int(), 'journey': list()}
     for journey in (Journey.query.filter_by(_group_id=group_id).order_by(Journey._datetime.asc()).all() or []):
-        if first:
-            first = False
-            last_date = journey.datetime.date()
-            latest_date = journey.datetime.date()
-            day_info = {'date': '', 'day': -(latest_date - journey.datetime.date()).days + 1, 'journey': list()}
-            day_info['date'] = journey.datetime.date().isoformat()
-        if last_date != journey.datetime.date():
-            count += 1
-            if (day is not None and count == day):
-                break
-            data.append(day_info)
-            day_info = {'date': '', 'day': -(latest_date - journey.datetime.date()).days + 1, 'journey': list()}
-            day_info['date'] = journey.datetime.date().isoformat()
-            count += 1
+        journey_info = {'journey_id': journey.id, 'time': journey.datetime, 'place': journey.place, 'note': journey.note}
+        if journey.datetime in temp:
+            temp[journey.datetime].append(journey_info)
+        else:
+            temp[journey.datetime] = [journey_info]
 
-        journey_info = {'journey_id': journey.id, 'time': journey.datetime.time().isoformat(),
-                        'place': journey.place, 'note': journey.note}
-        day_info['journey'].append(journey_info)
-        last_date = journey.datetime.date()
+    if len(temp.keys()) == 0:
+        return jsonify(data)
 
-    data.append(day_info)  # 最後一個要存回去
+    first_date = min(temp.keys()).date()
+
+    for key, value in temp.items():
+        temp[key] = sorted(value, key=lambda journey: journey['time'])
+        for index in range(len(temp[key])):
+            temp[key][index]['time'] = temp[key][index]['time'].strftime('%H:%M')
+        single_day_journey = {'date': key.date().isoformat(), 'day': (key.date() - first_date).days + 1, 'journey': value}
+        data.append(single_day_journey)
 
     return jsonify(data)

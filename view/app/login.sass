@@ -72,14 +72,6 @@ body
         height: 10vw
         background-color: #B5A24C
 
-.verification-page p
-    @extend %input-style
-    display: flex
-    align-items: center
-    background-color: #808080
-    height: 12vw
-    width: 70vw
-
 .login-error-msg, .sign-up-error-msg
     color: red
 
@@ -127,6 +119,16 @@ body
         position: absolute
         right: 2vw
 
+.choose-group-name
+    position: absolute
+    left: 50vw
+    z-index: 100
+    transform: translate(-50%, 17.5vw)
+    background-color: #FFF3E0
+    color: #808080
+    font-weight: 600
+    padding: 0 1vw
+
 .group-box .imgbox .img1
     opacity: 0.8
     z-index: 0
@@ -163,6 +165,10 @@ body
     justify-content: space-between
     button
         margin: 0 0 4vh 0
+
+.join-group-error-msg
+    color: red
+    transform: translateY(-5vw)
 
 .title-with-icon
     @include flex-center
@@ -216,7 +222,7 @@ body
     div
         width: 45%
 
-.create-group-error-msg, .who-am-i-error-msg, .join-group-error-msg
+.create-group-error-msg, .who-am-i-error-msg
     color: red
     transform: translateY(-14vw)
 

@@ -2,7 +2,7 @@ from flask import abort, jsonify, request
 from flask_login import login_required, current_user
 
 from flaskr.models import PostComment, User, UsersWithoutVerify, Group, UserGroup, Transaction, UserTransaction, TransactionMessage
-from flaskr import app
+from flaskr import app, socketio
 
 from datetime import date, datetime, timedelta
 import json
@@ -18,7 +18,7 @@ def isempty(*args: str) -> bool:
 @app.route('/api/transaction/set-transaction', methods=['POST'])
 @login_required
 def set_transaction():
-    transaction_id = request.values.get('transaction_id', None)
+    transaction_id = request.values.get('transaction_id', '')
     group_id = request.values.get('group_id', '')
     title = request.values.get('title', '')
     amount = request.values.get('amount', '')
@@ -34,39 +34,47 @@ def set_transaction():
         payer_id = int(payer_id)
         amount = int(amount)
         divider = json.loads(divider)
-        if transaction_id is not None:
-            transaction_id = int(transaction_id)
+        transaction_id = int(transaction_id) if not isempty(transaction_id) else None
+        transaction = Transaction.query.get(transaction_id) if transaction_id else None
+        user_group = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
     except:
         abort(400)
 
+    if not user_group or (transaction and transaction.closed):
+        abort(400)
     if isempty(title) or amount <= 0 or isempty(transaction_type) or type(divider) != list or len(divider) == 0:
         abort(400)
     if split_method not in ['percentage', 'extra', 'normal', 'number_of']:
         abort(400)
 
     data = {'transaction_id': None}
-    if transaction_id is None:
+
+    if transaction is None:
         transaction = Transaction.create(group_id=group_id, amount=amount, description=title, note=note,
                                          payer_id=payer_id, split_method=split_method, datetime=datetime.now(),
                                          type=transaction_type)
     else:
-        transaction = Transaction.query.get(transaction_id)
         transaction.amount = amount
         transaction.description = title
-        print(transaction.description)
         transaction.note = note
         transaction.payer_id = payer_id
         transaction.split_method = split_method
-        transaction.datetime = datetime.now()
         transaction.type = transaction_type
         for usertransaction in (UserTransaction.query.filter_by(_transaction_id=transaction.id).all() or []):
             usertransaction.remove()
+
     member_expense_sum = 0
+    most_expense_user = {'user': None, 'cost': 0}
+
     if split_method == 'percentage':
         for person in divider:
             personal_expenses = amount * (person['value'] * 0.01)
             UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
                                    personal_expenses=personal_expenses, input_value=person['value'], agree=False)
+            most_expense_user = {
+                'user': person['user_id'],
+                'cost': personal_expenses
+            } if personal_expenses > most_expense_user['cost'] else most_expense_user
             member_expense_sum += personal_expenses
     elif split_method == 'extra':
         common_amount = amount - sum([person['value'] for person in divider])
@@ -75,11 +83,19 @@ def set_transaction():
             personal_expenses = personal_common_expense + person['value']
             UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
                                    personal_expenses=personal_expenses, input_value=person['value'], agree=False)
+            most_expense_user = {
+                'user': person['user_id'],
+                'cost': personal_expenses
+            } if personal_expenses > most_expense_user['cost'] else most_expense_user
             member_expense_sum += personal_expenses
     elif split_method == 'normal':
         for person in divider:
             UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
                                    personal_expenses=person['value'], input_value=person['value'], agree=False)
+            most_expense_user = {
+                'user': person['user_id'],
+                'cost': personal_expenses
+            } if personal_expenses > most_expense_user['cost'] else most_expense_user
             member_expense_sum += person['value']
     elif split_method == 'number_of':
         total = sum([person['value'] for person in divider])
@@ -87,14 +103,20 @@ def set_transaction():
             personal_expenses = int(amount / total)
             UserTransaction.create(transaction_id=transaction._id, user_id=person['user_id'],
                                    personal_expenses=personal_expenses, input_value=person['value'], agree=False)
+            most_expense_user = {
+                'user': person['user_id'],
+                'cost': personal_expenses
+            } if personal_expenses > most_expense_user['cost'] else most_expense_user
             member_expense_sum += personal_expenses
-    currentuser_event = UserTransaction.query.filter_by(
-        _transaction_id=transaction._id, _user_id=current_user.id).first()  # 設為同意的為記錄此帳的人
-    if currentuser_event is not None:
-        currentuser_event.agree = True
-    transaction.amount = member_expense_sum
+
+    if member_expense_sum != amount:
+        user_transaction = UserTransaction.query.filter_by(_transaction_id=transaction._id, _user_id=most_expense_user['user']).first()
+        user_transaction.personal_expenses = user_transaction.personal_expenses + (amount - member_expense_sum)
+
     transaction.try_close_transaction()
     data['transaction_id'] = transaction._id
+
+    socketio.emit('update')
 
     return jsonify(data)
 
@@ -118,7 +140,7 @@ def get_transaction_info():
     transaction = Transaction.query.get(transaction_id)
     if not transaction:
         abort(404)
-    data = {"title": transaction.description, "amount": transaction.amount, "type": transaction.type, "state": True,
+    data = {"title": transaction.description, "amount": transaction.amount, "type": transaction.type, "state": transaction.closed,
             "date": transaction.datetime.date().isoformat(), "split_method": transaction.split_method,
             "payer_id": transaction.payer_id, "payer_name": "", "note": transaction.note, "picture": transaction.picture,
             "divider": [], "message_list": []}
@@ -127,8 +149,6 @@ def get_transaction_info():
         member_event = UserTransaction.query.filter_by(_transaction_id=transaction.id, _user_id=user.id).first()
         if member.id == transaction.payer_id:
             data['payer_name'] = member.user_name
-        if member_event.personal_expenses > 0 and not member_event.agree:
-            data['state'] = False
         data['divider'].append({'user_id': user.id, 'nickname': member.user_name,
                                 'amount': member_event.personal_expenses, "input_value": member_event.input_value,
                                 'state': member_event.agree, 'picture': user.picture})
@@ -137,9 +157,8 @@ def get_transaction_info():
         count += 1
         user = UserGroup.query.filter_by(_group_id=transaction.group_id, _user_id=message.user_id).first()
         data['message_list'].append({'user_name': user.user_name, 'message': message.messages})
-        if amount is not None:
-            if count == amount:
-                break
+        if amount is not None and count == amount:
+            break
 
     return jsonify(data)
 
@@ -148,83 +167,66 @@ def get_transaction_info():
 @login_required
 def get_group_transaction():
     group_id = request.args.get('group_id', '')
-    days = request.args.get('days', None)
-    amount = request.args.get('amount', None)
+    days = request.args.get('days', '')
+    amount = request.args.get('amount', '')
 
     try:
         group_id = int(group_id)
+        days = (int(days) if int(days) >= 0 else 0) if not isempty(days) else None
+        amount = (int(amount) if int(amount) >= 0 else 0) if not isempty(amount) else None
+        user_group = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
     except:
         abort(400)
 
-    if (days != None and amount != None) or (days != None and amount == None):  # 兩者皆傳 #只傳天數
-        try:
-            days = int(days)
-            if amount is not None:
-                amount = int(amount)
-        except:
-            abort(400)
+    if not user_group:
+        abort(400)
 
-        data = list()
-        count = 0
-        for single_date in (date.today() + timedelta(n * -1) for n in range(0, days)):
+    data = list()
+
+    if days:
+        for single_date in (date.today() + timedelta(days * -1 + (n + 1)) for n in range(0, days)):
             day_info = {'date': single_date.isoformat(), 'total': 0, 'transactions': list()}
-            for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
+            transaction_counter = 0
+            for transaction in (Transaction.query.filter(Transaction._group_id == group_id).order_by(Transaction._datetime.desc()).all() or []):
                 if transaction.datetime.date() != single_date:
                     continue
                 transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
-                                    'total_money': transaction.amount, 'state': True}
-                for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
-                    if response.personal_expenses > 0 and not response.agree:
-                        transaction_info['state'] = False
-                        break
+                                    'total_money': transaction.amount, 'state': transaction.closed}
                 day_info['transactions'].append(transaction_info)
                 day_info['total'] = day_info['total'] + \
                     transaction_info['total_money'] if transaction_info['state'] else day_info['total']
-                count += 1
-                if amount is not None:
-                    if(count == amount):
-                        break
-            data.append(day_info)
-            if amount is not None:
-                if(count == amount):
+                transaction_counter += 1
+                if amount and transaction_counter == amount:
                     break
+            data.append(day_info)
+            if amount and transaction_counter == amount:
+                break
 
-    else:  # 只傳amount #都沒傳
-        try:
-            if amount is not None:
-                amount = int(amount)
-        except:
-            abort(400)
+    else:
+        temp = dict()
 
-        data = list()
-        count = 0
-        last_date = date
         for transaction in (Transaction.query.filter_by(_group_id=group_id).order_by(Transaction._datetime.desc()).all() or []):
-            if count == 0:
-                last_date = transaction.datetime.date()
-                day_info = {'date': '', 'total': 0, 'transactions': list()}
-                day_info['date'] = transaction.datetime.date().isoformat()
-            if last_date != transaction.datetime.date():
-                data.append(day_info)
-                day_info = {'date': '', 'total': 0, 'transactions': list()}
-                day_info['date'] = transaction.datetime.date().isoformat()
-            transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
-                                'total_money': transaction.amount, 'state': True}
+            transaction_info = {'transaction_id': transaction._id,
+                                'title': transaction.description, 'total_money': transaction.amount, 'state': True}
             for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
                 if response.personal_expenses > 0 and not response.agree:
                     transaction_info['state'] = False
                     break
-            day_info['transactions'].append(transaction_info)
-            day_info['total'] = day_info['total'] + \
-                transaction_info['total_money'] if transaction_info['state'] else day_info['total']
-            count += 1
-            if amount is not None:
-                if(count == amount):
-                    data.append(day_info)
-                    break
-            if (count == Transaction.query.filter(Transaction._group_id).count()):
-                data.append(day_info)  # 最後一個要存回去
-            last_date = transaction.datetime.date()
+            if transaction.datetime.date() not in temp:
+                temp[transaction.datetime.date()] = [transaction_info]
+            else:
+                temp[transaction.datetime.date()].append(transaction_info)
+            if amount and sum([len(value) for value in temp.values()]) == amount:
+                break
+
+        for key, value in temp.items():
+            day_info = {'date': key.isoformat(), 'total': 0, 'transactions': value}
+            for item in value:
+                day_info['total'] += item['total_money']
+            data.append(day_info)
+
+        data.sort(key=lambda day: date.fromisoformat(day['date']), reverse=True)
+
     return jsonify(data)
 
 
@@ -232,18 +234,20 @@ def get_group_transaction():
 @login_required
 def get_nonagreed_transaction():
     group_id = request.args.get('group_id', '')
-    amount = request.args.get('amount', None)
+    amount = request.args.get('amount', '')
 
     try:
         group_id = int(group_id)
-        if amount is not None:
-            amount = int(amount)
+        user_group = UserGroup.query.filter_by(_user_id=current_user.id, _group_id=group_id).first()
+        amount = int(amount) if not isempty(amount) else None
     except:
+        abort(400)
+
+    if not user_group:
         abort(400)
 
     data = list()
 
-    count = 0
     for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
         transaction_info = {'transaction_id': transaction._id, 'title': transaction.description,
                             'total_money': transaction.amount, 'date': transaction.datetime.date().isoformat()}
@@ -252,10 +256,10 @@ def get_nonagreed_transaction():
                 transaction_info['state'] = False
                 break
         data.append(transaction_info)
-        count += 1
-        if amount is not None:
-            if count == amount:
-                break
+
+        if amount and len(data) >= amount:
+            break
+
     return jsonify(data)
 
 
@@ -268,22 +272,22 @@ def new_transaction_message():
     try:
         transaction_id = int(transaction_id)
         message = json.loads(message)
+        transaction = Transaction.query.get(transaction_id)
+        user_transaction = UserTransaction.query.filter_by(
+            _transaction_id=transaction.id, _user_id=current_user.id).first()
     except:
         abort(400)
 
-    if type(message) != dict or message['type'] not in ['agree', 'disagree', 'message']:
+    if type(message) != dict or not user_transaction or message['type'] not in ['agree', 'disagree', 'message']:
         abort(400)
 
     data = False
 
-    transaction = Transaction.query.get(transaction_id)
-    event_of_pending = UserTransaction.query.filter_by(
-        _transaction_id=transaction_id, _user_id=current_user.id).first()
     if message.get('type') == 'agree':
-        event_of_pending.agree = True
+        user_transaction.agree = True
         data = True
     elif message.get('type') == 'disagree':
-        event_of_pending.agree = False
+        user_transaction.agree = False
         TransactionMessage.create(transaction_id=transaction_id, user_id=current_user.id,
                                   messages=message.get('content'))
         data = True
@@ -292,6 +296,9 @@ def new_transaction_message():
                                   messages=message.get('content'))
         data = True
     transaction.try_close_transaction()
+
+    socketio.emit('update')
+
     return jsonify(data)
 
 
@@ -299,16 +306,20 @@ def new_transaction_message():
 @login_required
 def get_transaction_type():
     group_id = request.args.get('group_id', '')
+
     try:
         group_id = int(group_id)
+        user_group = UserGroup.query.filter_by(_group_id=group_id, _user_id=current_user.id).first()
     except:
         abort(400)
 
-    data = list()
-    type_list = ['KIND', 'KIND1', 'KIND2']
+    if not user_group:
+        abort(400)
 
-    for type in type_list:
-        transaction_list = Transaction.query.filter_by(_group_id=group_id, _type=type).all()
-        if len(transaction_list) != 0:
-            data.append({'type': type, 'amount': len(transaction_list)})
+    data = dict()
+
+    for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
+        data[transaction.type] = data[transaction.type] + \
+            transaction.amount if transaction.type in data else transaction.amount
+
     return jsonify(data)

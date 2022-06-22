@@ -55,16 +55,17 @@ class User(db.Model, UserMixin):
     _password_hash = db.Column(db.String, nullable=False, unique=False)
     _email = db.Column(db.String, nullable=False, unique=True)
     _picture = db.Column(db.Text, nullable=True, unique=False)
-    _bank_code = db.Column(db.Integer, nullable=True, unique=False)
+    _bank_code = db.Column(db.String, nullable=True, unique=False)
     _account = db.Column(db.String, nullable=True, unique=False)
+    _points = db.Column(db.Integer, nullable=False, unique=False)
 
-    def __init__(self, name, password_hash, email, picture, bank_code, account) -> None:
+    def __init__(self, name: str, password_hash: str, email: str, bank_code: str, account: str, points: int) -> None:
         self._name = name
         self._password_hash = password_hash
         self._email = email
-        self._picture = picture
         self._bank_code = bank_code
         self._account = account
+        self._points = points
 
     def __repr__(self) -> str:
         return '<User {} {}>'.format(self._name, self._email)
@@ -125,6 +126,15 @@ class User(db.Model, UserMixin):
         self._account = value
         DatabaseManager.update()
 
+    @property
+    def points(self) -> int:
+        return self._points
+
+    @points.setter
+    def points(self, value) -> None:
+        self._points = value
+        DatabaseManager.update()
+
     def remove(self) -> bool:
         for group_user in UserGroup.query.filter_by(_user_id=self.id).all():
             group_user.remove()
@@ -143,16 +153,16 @@ class User(db.Model, UserMixin):
         return DatabaseManager.delete(self)
 
     @classmethod
-    def create(cls, name, email, password=None, password_hash=None, picture=None, bank_code=None, account=None) -> User:
+    def create(cls, name, email, password=None, password_hash=None, bank_code=None, account=None, points=0) -> User:
         if cls.query.filter(func.lower(cls._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the database.')
         if password_hash:
             user = cls(name=name, password_hash=password_hash, email=email,
-                       picture=picture, bank_code=bank_code, account=account)
+                       bank_code=bank_code, account=account, points=points)
         elif password:
             password_hash = password
             user = cls(name=name, password_hash=password_hash, email=email,
-                       picture=picture, bank_code=bank_code, account=account)
+                       bank_code=bank_code, account=account, points=points)
         else:
             raise ValueError('User cannot be created without password.')
         DatabaseManager.create(user)
@@ -257,6 +267,7 @@ class UsersWithoutVerify(db.Model):
             try:
                 User.create(name=user_without_verify.username, password_hash=user_without_verify.password_hash,
                             email=user_without_verify.email)
+                user_without_verify.remove()
                 return True
             except:
                 return False
@@ -420,6 +431,7 @@ class UserGroup(db.Model):
     _personal_balance = db.Column(db.Integer, nullable=False, unique=False)
     _account = db.Column(db.String, nullable=False, unique=False)
     _received = db.Column(db.Integer, nullable=False, unique=False)
+    _picture = db.Column(db.Text, nullable=True, unique=True)
 
     def __init__(self, user_id, group_id, user_name, personal_balance, account, received) -> None:
         self._user_id = user_id
@@ -488,6 +500,15 @@ class UserGroup(db.Model):
     @received.setter
     def received(self, value) -> None:
         self._received = value
+        DatabaseManager.update()
+
+    @property
+    def picture(self) -> str:
+        return self._picture
+
+    @picture.setter
+    def picture(self, value) -> None:
+        self._picture = value
         DatabaseManager.update()
 
     def remove(self) -> bool:

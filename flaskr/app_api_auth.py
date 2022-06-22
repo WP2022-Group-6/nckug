@@ -3,6 +3,7 @@ from flask_login import login_user
 
 from flaskr.models import User, UsersWithoutVerify
 from flaskr import app
+from flaskr.mail import send_email
 
 
 def isempty(*args: str) -> bool:
@@ -39,7 +40,18 @@ def signup():
     data = False
 
     try:
-        UsersWithoutVerify.create(username=username, password=password, email=email)
+        user = UsersWithoutVerify.create(username=username, password=password, email=email)
+        subject ='Team-Debit 註冊驗證函'
+        message = '{} 您好：<br><br>'.format(username) + \
+                  '您的 Team-Debit 註冊驗證碼是 【{}】<br>'.format(user.verification) + \
+                  '請複製驗證碼後回到 Team-Debit 系統<br>' + \
+                  '點選「註冊」、「輸入驗證碼」填入上方提供的驗證碼，<br>' + \
+                  '即可完成註冊囉！<br><br>' + \
+                  '註：<br>' + \
+                  '若您未曾註冊本系統<br>' + \
+                  '敬請直接忽略本郵件，謝謝<br><br>' + \
+                  'Team-Debit 開發團隊 敬上'
+        send_email(subject, message, email)
         data = True
     except:
         data = False

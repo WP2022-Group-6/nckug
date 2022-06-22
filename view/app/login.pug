@@ -3,6 +3,7 @@ html
   head
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(rel="icon" href="../image/favicon.svg" type="image/x-icon")
     title Team Debit
 
     // Third Party CSS
@@ -54,14 +55,14 @@ html
         button 立即註冊
         button 輸入驗證碼
 
-    // 驗證頁面(unconnected yet)
+    // 驗證頁面
     section.verification-page.transition.hidden
       div
         i.large.chevron.left.icon
         h1 驗證
       div
-        h2 寄送驗證碼至以下信箱
-        p 123@gmail.com
+        h2 請輸入註冊使用的信箱
+        input(type="text" placeholder="電子郵件" name='email')
       div
         h2 請輸入驗證碼
         input(type="text" placeholder="驗證碼" name='verification-code')
@@ -82,7 +83,7 @@ html
           li.img-none
         i.big.grey.angle.left.icon
         i.big.grey.angle.right.icon
-
+        p.choose-group-name 群組名稱
       button.choose-group-enter 進入群組
       button.choose-group-create 創立群組
       button.choose-group-join 加入現有群組
@@ -134,7 +135,7 @@ html
         h1 加入群組
       .join-container
         div
-          h2 群組邀請碼
+          h2 群組ID
           input(type="text" name='group-id')
         div
           h2 群組密碼
@@ -157,6 +158,7 @@ html
 
 
     // JavaScript
+    script(src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js")
     script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js")
