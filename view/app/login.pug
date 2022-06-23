@@ -3,6 +3,7 @@ html
   head
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(rel="icon" href="../image/favicon.svg" type="image/x-icon")
     title Team Debit
 
     // Third Party CSS
@@ -13,14 +14,16 @@ html
   body
     // 首頁
     h1.entrance-title Team Debit
-    div
-      button.entrance-btn 登入
+    div.entrance-btn
+      button 登入
       br
-      button.entrance-btn 註冊
+      button 註冊
 
     // 登入頁面
     section.login-page.transition.hidden
-      h1 登入
+      div
+        i.large.chevron.left.icon
+        h1 登入
       div
         h2 帳號
         input(type="text" placeholder="電子郵件" name='email')
@@ -28,28 +31,68 @@ html
         h2 密碼
         input(type="password" placeholder="密碼" name='pwd')
       .login-error-msg
-      button.login-btn 登入
+      button 登入
+
+    // 註冊頁面
+    section.sign-up-page.transition.hidden
+      div
+        i.large.chevron.left.icon
+        h1 註冊
+      div
+        h2 信箱
+        input(type="text" placeholder="電子郵件" name='email')
+      div
+        h2 使用者名稱
+        input(type="text" placeholder="使用者名稱" name='name')
+      div
+        h2 密碼
+        input(type="password" placeholder="密碼" name='pwd')
+      div
+        h2 再次輸入密碼
+        input(type="password" placeholder="密碼" name='pwd-again')
+      .sign-up-error-msg
+      .sign-up-button-div
+        button 立即註冊
+        button 輸入驗證碼
+
+    // 驗證頁面
+    section.verification-page.transition.hidden
+      div
+        i.large.chevron.left.icon
+        h1 驗證
+      div
+        h2 請輸入註冊使用的信箱
+        input(type="text" placeholder="電子郵件" name='email')
+      div
+        h2 請輸入驗證碼
+        input(type="text" placeholder="驗證碼" name='verification-code')
+      .verification-error-msg
+      button 開始使用
 
     // 選擇群組畫面
     section.choose-group-page.transition.hidden
       .choose-text
         p 請選擇進入您原有的群組
         p 或者創立群組
-      .group-container
-        diV
-        div
-        div
-        div
+      .group-box
+        ul.imgbox
+          li.img1
+          li.img2
+          li.img3
+          li.img-none
+          li.img-none
         i.big.grey.angle.left.icon
         i.big.grey.angle.right.icon
+        p.choose-group-name 群組名稱
       button.choose-group-enter 進入群組
       button.choose-group-create 創立群組
       button.choose-group-join 加入現有群組
 
     // 創立群組頁面
     section.create-group-page.transition.hidden
-      i.big.grey.arrow.left.icon
-      h1 創立群組
+      .title-with-icon
+        i.large.chevron.left.icon
+        h1 創立群組
       .create-pic
         i.huge.icons
           i.grey.image.icon
@@ -60,31 +103,39 @@ html
           input(type="text" name='group-name')
         .create-two-input
           div
-            h2 幣別
-            select(name='group-currency')
-              option(value='TWD') 台幣TWD
-              option(value='USD') 美元USD
-              option(value='JPY') 日幣JPY
-          div
             h2 類型
             select(name='group-kind')
               option(value='travel') 旅遊
               option(value='life') 生活
               option(value='club') 社團
               option(value='other') 其他
+          div
+            h2 首次匯款
+            input(type="number" name='group-first-transaction')
         div
-          h2 餘額通知
-          input(type="number" name='group-balance')
+          h2 幣別
+          select(name='group-currency')
+            option(value='TWD') 台幣TWD
+            option(value='USD') 美元USD
+            option(value='JPY') 日幣JPY
+        .create-two-input
+          div
+            h2 餘額通知
+            input(type="number" name='group-balance')
+          div
+            h2 每次儲值
+            input(type="number" name='group-refill')
       .create-group-error-msg
       button 下一步
 
     // 加入群組頁面
     section.join-group-page.transition.hidden
-      i.big.grey.arrow.left.icon
-      h1 加入群組
+      .title-with-icon
+        i.large.chevron.left.icon
+        h1 加入群組
       .join-container
         div
-          h2 群組邀請碼
+          h2 群組ID
           input(type="text" name='group-id')
         div
           h2 群組密碼
@@ -92,10 +143,11 @@ html
       .join-group-error-msg
       button 下一步
 
-    //我是誰頁面(for both create and join)
+    // 我是誰頁面(for both create and join)
     section.who-am-i-page.transition.hidden
-      i.big.grey.arrow.left.icon
-      h1 我是誰??
+      .title-with-icon
+        i.large.chevron.left.icon
+        h1 我是誰??
       .who-am-i-pic
         i.huge.grey.user.circle.outline.icon
       .who-am-i-container
@@ -106,6 +158,7 @@ html
 
 
     // JavaScript
+    script(src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js")
     script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js")

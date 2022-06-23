@@ -18,8 +18,8 @@
   },
   "homepage": "https://github.com/WP2022-Group-6/team-debit#readme",
   "devDependencies": {
-    "@parcel/transformer-pug": "2.5.0",
-    "@parcel/transformer-sass": "2.5.0"
+    "@parcel/transformer-pug": "2.6.2",
+    "@parcel/transformer-sass": "2.6.2"
   },
   "dependencies": {
     "jquery": "^3.6.0",

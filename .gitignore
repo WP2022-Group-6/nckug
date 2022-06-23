@@ -1,5 +1,6 @@
 # Database
 database/
+uploads/
 
 # VSCode
 **/.vscode/*
@@ -19,3 +20,6 @@ config.py
 
 # Yarn
 yarn.lock
+
+# testing
+test/

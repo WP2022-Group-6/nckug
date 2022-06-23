@@ -3,6 +3,7 @@ html
   head
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(rel="icon" href="../image/favicon.svg" type="image/x-icon")
     title Team Debit
 
     // Third Party CSS
@@ -11,36 +12,69 @@ html
     // Customized CSS
     link(href="./main.sass" rel="stylesheet")
   body
+    // 上方橫幅
     section.main-top
       .main-dashed
         .main-top-ellipse
         .main-top-circuit
         .main-top-text
-          i.big.align.justify.icon
+          div
+            i.big.align.justify.icon
+            i.big.circle.icon
           p 群組名稱
           h2 總餘額
           h1 17036
           h3 NTD
 
+    // 主畫面(第一分頁) 及 圖表頁面(第三分頁)
     section.home-page
       h3 每日花費
       .home-today-cost
         p 今日
-        p 1392
+        p 0
         p NTD
-      .hone-barchart-div
+      .home-barchart-div
         canvas#barChart
-      h3 近期紀錄
-      .home-recored
-        each val in [1, 2, 3, 4]
-          div
-            h3 名稱
-            h3 金額
-            i.big.check.circle.outline.icon
+      // 主畫面下半部分
+      section.home-bottom-part
+        h3 近期紀錄
+        .home-record
+          //- each val in [1, 2, 3, 4]
+          //-   div
+          //-     h3 名稱
+          //-     h3 金額
+          //-     i.big.check.circle.outline.icon
+      // 圖表頁面下半部分
+      section.chart-bottom-part.transition.hidden
+        h3 花費類型
+        .chart-piechart-div
+          canvas#pieChart
 
+    // 帳目頁面(第二分頁)
+    section.record-page.transition.hidden
+      .record-dashed
+        .record-top-text
+          div
+            i.big.align.justify.icon
+            i.big.circle.icon
+          div
+            i.big.times.circle.outline.icon
+            h3 目前有X筆待同意帳目
+        .record-middle-text
+          .record-record
+            h3 帳目紀錄
+            each day in [1, 2, 3]
+              p 2022/05/25
+              each val in [1, 2, 3, 4]
+                div
+                  h3 名稱
+                  h3 金額
+                  i.big.check.circle.outline.icon
+
+    // 群組頁面(第四分頁)
     section.group-page.transition.hidden
       h3 每人餘額
-      .group-recored
+      .group-record
         each val in [1, 2]
           div
             div
@@ -51,7 +85,30 @@ html
           h3 邀請其他朋友
       button 群組結算
 
+    // 個人頁面(右上btn分頁)
+    section.personal-record-page.transition.hidden
+      .personal-top-part
+        .personal-dashed
+          .personal-top-ellipse
+          .personal-top-circuit
+          .personal-top-text
+            i.big.align.justify.icon
+            .personal-pic
+              i.huge.grey.user.circle.outline.icon
+            p 名稱
+            div
+              h2 個人餘額
+              h1 3468
+              h3 NTD
+      .personal-bottom-part
+        h3 帳目紀錄
+        .personal-record
+          each val in [1, 2, 3, 4]
+            div
+              h3 名稱
+              h3 金額
 
+    // 下方選單
     section.main-buttom-banner
       i.big.home.icon
       i.big.list.alternate.outline.icon
@@ -59,6 +116,7 @@ html
       i.big.chart.bar.icon
       i.big.users.icon
 
+    // 匯款頁面
     section.remittance-page.transition.hidden
       h1 匯款
       .remittance-group
@@ -66,54 +124,95 @@ html
           i.image.icon
           i.grey.top.right.corner.add.icon
       p.remittance-group-name 群組名稱
+      // 未匯款頁面
       section.remittance-unpaid
         h2 目前餘額：
         h2 仍須匯款：
         .remittance-account
           h3 匯款帳號
           h3 1234567 1234567
+      // 已匯款頁面
       section.remittance-paid.transition.hidden
         p 成員名稱
         i.huge.check.icon
         h2 已匯款
       button 複製帳號
 
+    // 寄送邀請頁面
+    section.send-invitation-page.transition.hidden
+      i.large.close.icon
+      h1 寄送邀請
+      .invitation-group
+        i.huge.icons
+          i.image.icon
+          i.grey.top.right.corner.add.icon
+      p.invitation-group-name 群組名稱
+      //.qr-code-div
+      div
+        h3 群組ID
+        h3 123456
+        h3 群組密碼
+        h3 123456
+      button 複製邀請資訊
+      p 分享至
+
+    // 新增帳目頁面
     section.add-event-page.transition.hidden
       i.large.close.icon
       .add-event-money
         h1 金額
         div
           input(type="number" name='event-money')
+      .comment-page-top.transition.hidden
+        h1 支出項目
+        div
+          h3 名稱
+          h3 金額
       .add-event-image
         i.big.image.icon
+      .add-event-comment
+          i.big.comment.alternate.outline.icon
       section.add-event-content
-        h2 支出項目
-        input(type="text" name='event-name')
         h2 類型
         select(name='event-kind')
-          option(value='food') 食物
-          option(value='shopping') 購物
-          option(value='ent') 娛樂
-          option(value='other') 其他
+          option(value='Food') 食物
+          option(value='Shopping') 購物
+          option(value='Entertainment') 娛樂
+          option(value='Other') 其他
+        h2 支出項目
+        input(type="text" name='event-name')
         h2 備註
         input(type="text" name='event-memo')
         h2 付款人
-        div
+        .add-event-content-div
           .paid-people
             div
-          i.big.caret.down.icon
+          i.big.caret.down.icon.paid-people-btn
         h2 分帳人
-        div
+        .add-event-content-div
           .split-people
             div
             div
           i.big.caret.down.icon.split-people-btn
-        .add-event-content-error-msg
+        .add-event-content-error-msg.add-event-content-div
         button.add-event-save 儲存
-        .add-event-agreement.transition.hidden
+        .add-event-agreement
           button 同意
           button 不同意
 
+      // 付款人選擇頁面
+      section.paid-account.transition.hidden
+        .paid-account-content
+          h2 選擇付款人
+          .paid-record
+            each val in [1, 2, 3]
+              div.paid-select
+                div
+                h3 名稱
+        .paid-account-error-msg
+        button 確定
+
+      // 分帳方式頁面
       section.split-account.transition.hidden
         .split-account-navbar
           i.large.percent.icon.split-way
@@ -128,7 +227,7 @@ html
             p 按每人佔比分配
             i.circle.outline.icon
               h3 平分
-          .split-recored
+          .split-record
             each val in [1, 2, 3]
               div
                 div
@@ -137,16 +236,119 @@ html
         .split-account-error-msg
         button 確定
 
+      // 帳目討論頁面
+      section.comment-page.transition.hidden
+        .add-event-comment
+          i.big.comment.alternate.outline.icon
+        .comment-content
+          each val in [1, 2, 3, 4, 5, 6]
+            .each-comment-space
+              div
+              div
+                p name
+                p content content content content content content content content content content content content
+        .comment-input
+          div
+          input(type="text" placeholder="留言......")
+          input(type="button" value="發布")
+
+      // 不同意頁面
       section.denial-reason-page.transition.hidden
         h2 支出項目
-        input(type="text")
+        input(type="text" name="event-name" readonly="readonly")
         h1 不同意
         .denial-container
           h3 總金額輸入錯誤
           h3 分帳金額錯誤
-          input(placeholder="其他備註")
+          h3 其他
+          // input(placeholder="其他備註")
+
+    // 結算畫面
+    section.close-account-page.transition.hidden
+      .close-account-left-graph
+      .close-account-right-graph
+      div
+        i.large.chevron.left.icon
+        h1 結算
+      .close-account-image
+        i.huge.icons
+          i.image.icon
+          i.grey.top.right.corner.add.icon
+      p 群組名稱
+      p 成員名稱
+      // 結算再次確認畫面
+      section.close-review-page
+        button
+          p 結算餘額
+          p XXXXXX
+        .close-account-btn
+          h2 按下以結算
+          i.huge.dollar.sign.icon
+      // 最終結算畫面
+      section.close-done-page.transition.hidden
+        div
+          h2 群組已結帳
+          h2 確認並刪除群組
+        button 確認
+
+    // 帳目確認畫面
+    section.close-transaction-page.transition.hidden
+      .close-account-left-graph
+      .close-account-right-graph
+      h1 結算
+      .close-transaction-content
+        each val in [1, 2, 3, 4, 5, 6]
+          .close-transaction-title
+            h3 名稱
+            h3 金額
+          .close-transaction-detail.transition.hidden
+            div
+              div
+                p 日期
+                p 5/28
+              div
+                p 種類
+                p 食物
+            div
+              div
+                p 名稱
+                p XXX
+              div
+                p 金額
+                p XXX
+            div
+              p 備註
+              p XXXXXXX
+      button 返回
+
+
+    // 彈出側欄選單
+    section.side-menu-page.transition.hidden
+      .side-menu-block
+      .side-menu-content
+        .side-menu-choose-group
+          div
+            h1 選擇群組
+          h3 所有群組
+          // h3 群組A
+          // h3 群組B
+        .side-menu-group-setting
+          div
+            h1 群組設定
+          h3 群組管理
+        .side-menu-schedule
+          div
+            h1 行程規劃
+          h3 行程安排
+          h3 論壇區
+        .side-menu-personal-setting
+          div
+            h1 個人設定
+          h3 帳號設定
+          h3 登出
 
     // JavaScript
+    script(src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js")
     script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js")

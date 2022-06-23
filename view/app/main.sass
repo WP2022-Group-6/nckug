@@ -11,7 +11,7 @@ body
 /********************************/
 /*     01. Section main-top     */
 /********************************/
-.main-top
+.main-top, .personal-top-part
     display: flex
     justify-content: center
     align-items: center
@@ -19,7 +19,7 @@ body
     height: 25vh
     background-color: #EFA159
 
-.main-dashed
+.main-dashed, .personal-dashed
     border-style: dashed !important
     border-radius: 50px 50px 0 0
     border: 1.7vw solid #AE6D0C
@@ -38,15 +38,20 @@ body
         margin-right: 30vw
     h1
         font-size: 2.5rem
-    i
-        align-self: baseline
-        width: 2em
-        height: 1.5em
+    div
         display: flex
-        align-items: flex-end
-        justify-content: center
+        width: 100%
+        justify-content: space-between
+        i
+            color: #FFF3E0
+            align-self: baseline
+            width: 7vh
+            height: 5vh
+            display: flex
+            align-items: flex-end
+            justify-content: center
 
-.main-top-ellipse
+.main-top-ellipse, .personal-top-ellipse
     border-radius: 50%
     background-color: #605416
     position: absolute
@@ -56,7 +61,7 @@ body
     top: 7vh
     left: 35vw
 
-.main-top-circuit
+.main-top-circuit, .personal-top-circuit
     border-radius: 50%
     background-color: #AE6D0C
     position: absolute
@@ -101,9 +106,8 @@ body
     color: #808080
     z-index: 10
     h1
-        font-size: 3.5rem
-        padding: 2vh
-        margin-bottom: 1vh
+        font-size: 3rem
+        margin: 2vh 0
     h2
         margin: 0.2em auto !important
         font-size: 2rem
@@ -115,14 +119,14 @@ body
         font-size: 1.7rem
         margin: 0
     p
-        font-size: 1.5rem
+        font-size: 1.3rem
         font-weight: 600
     button
         @extend %btn-style
         margin-top: auto
         margin-bottom: 10vh
 
-.remittance-group
+.remittance-group, .invitation-group, .close-account-image
     @include flex-center
     @include circle
     background: #808080
@@ -166,8 +170,44 @@ body
         color: #B5A24C
         margin: 2vh 0
 
+/********************************************/
+/*     04. Section send-invitation-page     */
+/********************************************/
+.send-invitation-page
+    @include jump-page($bg-color: #FFF3E0, $h: 98.5vh)
+    color: #808080
+    z-index: 10
+    i.close
+        align-self: end
+        margin: 5vw 5vw 0 0
+    h1
+        font-size: 3rem
+        margin: 0 0 2vh 0
+    p
+        font-size: 1.3rem
+        font-weight: 600
+        margin: 2vw
+    button
+        @extend %btn-style
+        margin: 5vw
+    div
+        padding: 5vh 0
+        h3
+            margin: 2vw
+            font-size: 1.7rem
+            &:nth-child(2), &:nth-child(4)
+                width: 60vw
+                background-color: #c4c4c4
+                border-radius: 10px
+                padding: 1vw 3vw
+
+/*.qr-code-div
+    width: 40vw
+    height: 40vw
+    border: 2vw dashed #AE6D0C*/
+
 /*********************************/
-/*     04. Section home-page     */
+/*     05. Section home-page     */
 /*********************************/
 .home-page
     padding: 1vh 8vw
@@ -179,7 +219,7 @@ body
         text-align: end
         font-weight: 600
 
-.hone-barchart-div
+.home-barchart-div
     margin: 0 auto 2vh auto
     width: 84vw
     height: 15vh
@@ -190,7 +230,10 @@ body
     column-gap: 1vw
     width: 100%
 
-.home-recored
+/******************************************/
+/*     05-1. bottom part of home-page     */
+/******************************************/
+.home-record
     @include flex-center($dir: column)
     row-gap: 1vh
     div
@@ -208,8 +251,15 @@ body
         i
             color: #B5A24C
 
+/*******************************************/
+/*     05-2. bottom part of chart-page     */
+/*******************************************/
+.chart-piechart-div
+    width: 84vw
+    height: 30vh
+
 /**********************************/
-/*     05. Section group-page     */
+/*     06. Section group-page     */
 /**********************************/
 .group-page
     display: flex
@@ -218,7 +268,6 @@ body
     color: #808080
     height: calc(75% - 70px)
     h3
-        font-size: 1.5rem
         margin: 1vh 0
     button
         @extend %btn-style
@@ -226,7 +275,7 @@ body
         margin: auto 0 5vh 0
         background-color: #AE6D0C
 
-.group-recored
+.group-record
     display: flex
     flex-direction: column
     align-items: flex-end
@@ -235,7 +284,7 @@ body
     div
         display: inline-flex
         width: 75vw
-        height: 9vh
+        height: 8vh
         border-radius: 20px
         background-color: white
         box-shadow: 0 0.2em 0.2em #00000059
@@ -257,20 +306,174 @@ body
         h3
             width: 56.5vw !important
 
+/***********************************/
+/*     07. Section record-page     */
+/***********************************/
+.record-page
+    display: flex
+    height: calc(100vh - 70px)
+    justify-content: center
+    align-items: center
+    background: linear-gradient(to bottom, #EFA159 0 20vh, transparent 20vh 100vh)
+
+.record-dashed
+    width: 95vw
+    height: 88.5vh
+    color: #808080
+    border: 1.7vw solid #ae6d0c
+    border-radius: 50px 50px 0 0
+    border-style: dashed!important
+
+.record-top-text
+    flex-direction: column
+    align-items: center
+    display: flex
+    div:nth-child(1)
+        display: flex
+        justify-content: space-between
+        width: 100%
+        i
+            color: #FFF3E0
+            align-self: baseline
+            width: 7vh
+            height: 5vh
+            display: flex
+            align-items: flex-end
+            justify-content: center
+    div:nth-child(2)
+        @include flex-center
+        width: 67.5vw
+        height: 14vw
+        background-color: white
+        border: 1.1vw solid #efa159
+        border-radius: 10px
+        margin: calc((15vh - ((11.5vh - 70px) / 2) - 15.7vw) / 2) 0
+        h3
+            margin: 0
+        i
+            color: #B54C4C
+
+.record-middle-text
+    height: calc(88.5vh - 20vh + ((11.5vh - 70px) / 2) - 1.7vw)
+    overflow: auto
+    &::-webkit-scrollbar
+        display: none
+
+.record-record
+    @include flex-center($dir: column)
+    padding: 2vh 12vw
+    h3
+        margin: 0
+        align-self: baseline
+    p
+        margin: 0
+        align-self: baseline
+    div
+        display: inline-flex
+        justify-content: space-around
+        align-items: center
+        width: 100%
+        height: 14vw
+        border-radius: 10px
+        background-color: white
+        border: 1.1vw solid #EFA159
+        margin: 0.5vh 0
+        h3
+            margin: auto 0
+        h3:nth-child(1)
+            width: 40%
+            text-align: center
+        i
+            color: #B5A24C
+
+/***********************************/
+/*     08. Section record-page     */
+/***********************************/
+.personal-top-part
+    height: 45vh
+
+.personal-dashed
+    height: 42vh
+
+.personal-top-text
+    display: flex
+    flex-direction: column
+    align-items: center
+    p, h1, h2, h3
+        font-weight: 600
+        z-index: 10
+        margin: 0
+    h1
+        font-size: 2.5rem
+    p
+        font-size: 1.5rem
+        color: #FFF3E0
+    i.align.justify
+        align-self: baseline
+        width: 7vh
+        height: 5vh
+        display: flex
+        align-items: flex-end
+        justify-content: center
+    div:nth-child(4)
+        @include flex-center($dir: column)
+        height: 36.5vw
+        z-index: 10
+
+.personal-pic
+    @include flex-center
+    @include circle($radi: 30vw)
+    background-color: #FFF3E0
+    box-shadow: 0 0.2em 0.2em #00000059
+    z-index: 10
+
+.personal-top-ellipse
+    top: 26vh
+
+.personal-top-circuit
+    top: 25vh
+
+.personal-bottom-part
+    padding: 1vh 8vw
+    height: calc(55vh - 70px)
+    color: #808080
+    overflow-y: auto
+    &::-webkit-scrollbar
+        display: none
+    h3
+        margin: 1vh 0
+        height: 1.5rem
+
+.personal-record
+    text-align: center
+    div
+        display: inline-flex
+        justify-content: space-around
+        align-items: center
+        width: 80%
+        height: 14vw
+        border-radius: 10px
+        background-color: white
+        border: 1.1vw solid #EFA159
+        margin: 0.5vh
+        h3:nth-child(1)
+            width: 40%
+            text-align: center
+
 /**************************************/
-/*     06. Section add-event-page     */
+/*     09. Section add-event-page     */
 /**************************************/
 .add-event-page
     @include jump-page($bg-color: #F7CA9C, $h: 98.5vh)
     z-index: 10
     i.close
-        margin: 1vh 5vw 0 0
+        margin: 5vw 5vw 0 0
         color: #808080
         align-self: end
     section
         position: absolute
         bottom: 0
-        height: 77vh
+        height: 75vh
         display: flex
         flex-direction: column
         width: 100vw
@@ -297,24 +500,34 @@ body
             &:focus
                 outline: none
 
-.add-event-image
+.add-event-image, .add-event-comment
     position: absolute
-    bottom: 77vh
     right: 0
     display: flex
     justify-content: flex-end
-    align-items: flex-end
     width: 15vw
     height: 15vw
-    background-color: #798337
-    border-radius: 100% 0 0 0
     margin-left: auto
     i
         margin: 1.5vw
 
+.add-event-image
+    align-items: flex-end
+    border-radius: 100% 0 0 0
+    bottom: 75vh
+    background-color: #798337
+
+.add-event-comment
+    align-items: flex-start !important
+    border-radius: 0 0 0 100%
+    bottom: calc(75vh - 15vw)
+    background-color: #AE6D0C
+    z-index: 100
+    i
+        color: white
 
 /*******************************************/
-/*     06-1. Section add-event-content     */
+/*     09-1. Section add-event-content     */
 /*******************************************/
 .add-event-content
     padding: 1vh 10vw
@@ -327,24 +540,29 @@ body
         width: 100%
         font-size: 1.2em
         outline-color: #AE6D0C
+    select
+        width: 50%
     button
         @extend %btn-style
         align-self: center
-        margin: 0 0 5vh 0
-    div
-        display: inline-flex
-        align-items: center
-        i
-            @include flex-center
-            margin-left: auto
-            border-radius: 10px
-            background-color: #F6BF6A
-            width: 7vw
-            height: 8vw
+        margin: 0 0 2vw 0
+
+.add-event-content-div
+    display: inline-flex
+    align-items: center
+    i.caret.down
+        @include flex-center
+        margin-left: auto
+        border-radius: 10px
+        background-color: #F6BF6A
+        width: 7vw
+        height: 8vw
 
 .add-event-agreement
+    display: inline-flex
     column-gap: 5vw
     justify-content: center
+    align-items: center
     button
         width: 35vw
     button:nth-child(1)
@@ -367,9 +585,9 @@ body
     margin-top: auto
 
 /***************************************/
-/*     06-2. Section split-account     */
+/*     09-2. Section split-account     */
 /***************************************/
-.split-account button
+.split-account button, .paid-account button
     @extend %btn-style
     align-self: center
     margin: auto 0 10vh 0
@@ -396,7 +614,7 @@ body
         border: 0 !important
         background-color: transparent !important
 
-.split-account-content
+.split-account-content, .paid-account-content
     padding: 1vh 10vw
 
 .split-content-depiction
@@ -410,20 +628,13 @@ body
         margin: 0
     i
         width: fit-content
-        display: flex
+        display: none
         align-items: center
         height: 100%
         h3
             margin-left: 1vw
 
-.split-account-error-msg
-    align-self: center
-    color: red
-
-/********************************************/
-/*     06-3. Section denial-reason-page     */
-/********************************************/
-.split-recored
+.split-record, .paid-record
     display: flex
     flex-direction: column
     align-items: flex-end
@@ -454,6 +665,94 @@ body
                 transform: translateY(-0.5rem)
                 white-space: normal
 
+.split-account-error-msg, .paid-account-error-msg
+    align-self: center
+    color: red
+
+/**************************************/
+/*     09-3. Section comment-page     */
+/**************************************/
+.comment-page-top
+    h1
+        margin: 0
+    div
+        display: inline-flex
+        justify-content: space-around
+        width: 80vw
+        height: 14vw
+        border: 1.1vw solid #efa159
+        border-radius: 10px
+        margin: calc((9vh - 14vw) / 2) 0
+        background-color: white
+        color: #808080
+        h3
+            margin: auto 0
+        h3:nth-child(1)
+            width: 30vw
+            text-align: center
+
+.comment-content
+    display: flex
+    flex-direction: column-reverse
+    padding: 8vw 5vw 0 5vw
+    height: calc(75vh - 16vw)
+    overflow-y: auto
+    &::-webkit-scrollbar
+        display: none
+
+.each-comment-space
+    display: flex
+    justify-content: space-between
+    margin: 1.5vw 0
+    div:nth-child(1)
+        @include circle($radi: 12vw)
+        background-color: #EFA159
+        box-shadow: 0 0.1em 0.1em #00000059
+    div:nth-child(2)
+        width: 77vw
+        p:nth-child(1)
+            margin: 0
+        p:nth-child(2)
+            word-break: break-all
+            width: fit-content
+            background-color: white
+            border: 1.1vw solid #EFA159
+            border-radius: 8px
+            padding: 0.5vw 2vw
+
+.comment-input
+    display: flex
+    justify-content: space-between
+    position: fixed
+    bottom: 0
+    width: 100vw
+    height: 16vw
+    padding: 2vw 5vw
+    background-color: #F7CA9C
+    div
+        @include circle($radi: 12vw)
+        background-color: #EFA159
+        box-shadow: 0 0.1em 0.1em #00000059
+        color: #808080
+    input[type="text"]
+        background-color: white
+        border: 1.1vw solid #808080
+        border-radius: 8px
+        padding: 0.5vw 14vw 0.5vw 2vw
+        width: 77vw
+        font-weight: 600
+    input[type="button"]
+        position: absolute
+        right: 5vw
+        width: 15vw
+        height: 12vw
+        background-color: transparent
+        border: 0
+        font-weight: 600
+
+/********************************************/
+/*     09-4. Section denial-reason-page     */
+/********************************************/
 .denial-reason-page
     padding: 1vh 10vw
     align-items: center
@@ -501,3 +800,190 @@ body
             color: white
             font-weight: 600
 
+/**************************************/
+/*     10. Section side-menu-page     */
+/**************************************/
+.side-menu-page, .side-menu-block, .side-menu-content
+    position: fixed
+    top: 0
+    left: 0
+    width: 100vw
+    height: 100vh
+    z-index: 100
+
+.side-menu-content
+    width: 50vw
+    background-color: rgba(181, 162, 76, 0.9)
+    border-radius: 0 25px 25px 0
+    padding: 3vh 6vw
+    div
+        margin: 2vh 0
+        div
+            width: 27vw
+            border-radius: 20px
+            height: 11vw
+            white-space: nowrap
+            padding-left: 2vw
+            display: flex
+            align-items: center
+    h3
+        margin: 2vw 1vh
+    div:nth-child(1) div
+        background-color: #798337
+    div:nth-child(2) div
+        background-color: #B54C4C
+    div:nth-child(3) div
+        background-color: #263cb8
+    div:nth-child(4) div
+        background-color: #AE6D0C
+
+/******************************************/
+/*     11. Section close-account-page     */
+/******************************************/
+.close-account-page
+    @include jump-page($bg-color: #FFF3E0, $h: 98.5vh)
+    z-index: 10
+    color: #808080
+    h1
+        margin: 0
+        padding: 2vh
+        font-size: 3rem
+    p
+        font-size: 1.3rem
+        font-weight: 600
+    div:nth-child(3)
+        @include flex-center
+        width: 100%
+        i
+            @include circle($radi: 12vw)
+            @include flex-center
+            position: absolute
+            left: 5vw
+            background-color: white
+
+.close-account-left-graph
+    position: fixed
+    width: 70vw
+    height: 70vw
+    background-color: #B5A24C
+    left: -45vw
+    top: 15vh
+    z-index: -1
+    border-radius: 30% 70% 70% 30%/35% 65% 43% 57%
+
+.close-account-right-graph
+    position: fixed
+    width: 100%
+    height: 100%
+    background-color: #AE6D0C
+    z-index: -1
+    right: -55%
+    bottom: -50%
+    clip-path: path('M 0.55 232.61 c 1.8 93.33 52.38 89.72 119.21 92.73 c 79 3.56 38.06 91.55 207.13 89.71 C 428 414 476 334.74 467 213.67 C 457.81 90.55 396.73 0.8 270.37 0.5 C 105 0.11 136.74 68.88 94.47 102 C 46 139.93 -1.16 144.42 0.55 232.61 Z')
+
+/*******************************************/
+/*     11-1. Section close-review-page     */
+/*******************************************/
+.close-review-page
+    @include flex-center($dir: column)
+    button
+        @extend %btn-style
+        height: 18vw
+        color: #FFF3E0
+        p
+            margin: 0
+
+.close-account-btn
+    @include circle($radi: 55vw)
+    @include flex-center($dir: column)
+    background-color: #605416
+    margin: 3vh
+    h2
+        color: #FFF3E0
+        margin: 2vw
+    i
+        @include flex-center
+        @include circle($radi: 20vw)
+        color: #EFA159
+        background-color: #FFF3E0
+        margin: 2vw
+
+/*****************************************/
+/*     11-2. Section close-done-page     */
+/*****************************************/
+.close-done-page
+    @include flex-center
+    div
+        @include flex-center($dir: column)
+        height: 15vh
+        width: 55vw
+        background-color: #605416
+        color: #FFF3E0
+        border-radius: 25px
+        margin: 2vw
+        box-shadow: 0 0.2em 0.2em #00000059
+        h2
+            margin: 1vw
+    button
+        @extend %btn-style
+        position: absolute
+        bottom: 10vh
+
+/**********************************************/
+/*     12. Section close-transaction-page     */
+/**********************************************/
+.close-transaction-page
+    @include jump-page($bg-color: #FFF3E0, $h: 98.5vh)
+    z-index: 10
+    color: #808080
+    h1
+        margin: 0
+        padding: 2vh
+        font-size: 3rem
+    button
+        @extend %btn-style
+        margin: auto
+
+.close-transaction-content
+    height: 75vh
+    width: 70vw
+    overflow-y: auto
+    &::-webkit-scrollbar
+        display: none
+
+.close-transaction-title
+    display: inline-flex
+    justify-content: space-around
+    width: 100%
+    height: 14vw
+    border-radius: 10px
+    background-color: white
+    border: 1.1vw solid #EFA159
+    margin: 0.5vh 0
+    h3
+        margin: auto 0
+    h3:nth-child(1)
+        width: 30vw
+        text-align: center
+
+.close-transaction-detail
+    border-radius: 10px
+    background-color: white
+    border: 1.1vw solid #EFA159
+    padding: 2vw
+    font-weight: 600
+    div
+        display: flex
+        padding: 1vw 0
+        div
+            width: 50%
+            align-items: center
+            padding: 0
+            border: 0 !important
+        p:nth-child(1)
+            margin: 0
+        p:nth-child(2)
+            margin: 0 auto
+    div:nth-child(2)
+        border-top: 1vw dashed #FEA159
+        border-bottom: 1vw dashed #FEA159
