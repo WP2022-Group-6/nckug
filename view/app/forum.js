@@ -1,7 +1,5 @@
 $(document).ready(() => {
-    var url = 'http://127.0.0.1'
-    var port = '5000'
-    var socket = io.connect(url + ':' + port)
+    var socket = io.connect(window.location.hostname)
     socket.on('update', function () {
         top_update()
     })
@@ -10,6 +8,13 @@ $(document).ready(() => {
 const urlParams = new URLSearchParams(window.location.search)
 let pageNow = urlParams.get('page')
 let groupId = urlParams.get('group-id')
+let collect_mode = 'False'
+
+if (groupId === null) {
+    $('.side-menu-group-setting').toggleClass('transition hidden')
+    $('.side-menu-schedule h3:nth-child(2)').toggleClass('transition hidden')
+}
+
 if(pageNow === "group-chosing-page") {
     $('.group-chosing-page').transition('toggle')
 } else if (pageNow === "group-setting-page") {
@@ -19,9 +24,12 @@ if(pageNow === "group-chosing-page") {
     schedule_refresh()
     $('.schedule-group-page').transition('toggle')
 } else if (pageNow === "forum-main-page") {
-    forum_refresh()
+    collect_mode = 'False'
+    $('.forum-main-bar h1').text('論壇')
+    forum_refresh(collect_mode)
     $('.forum-main-page').transition('toggle')
 } else if (pageNow === "personal-setting-page") {
+    personal_setting_refresh()
     $('.personal-setting-page').transition('toggle')
 }
 
@@ -60,12 +68,14 @@ $('.title-with-icon i.align.justify').click(() => {
 })
 
 $('.side-menu-choose-group h3').click(() => {
+    /*
     if (pageNow != "group-chosing-page") {
         $('.' + pageNow).transition('toggle')
         pageNow = 'group-chosing-page'
         $('.' + pageNow).transition('toggle')
     }
-    $('.side-menu-page').transition('slide right')
+    $('.side-menu-page').transition('slide right')*/
+    window.location = "/login.html?select=True"
 })
 
 $('.side-menu-group-setting h3').click(() => {
@@ -94,17 +104,26 @@ $('.side-menu-schedule h3:nth-child(3)').click(() => {
         pageNow = 'forum-main-page'
         $('.' + pageNow).transition('toggle')
     }
-    forum_refresh()
+    collect_mode = 'False'
+    $('.forum-main-bar h1').text('論壇')
+    forum_refresh(collect_mode)
     $('.side-menu-page').transition('slide right')
 })
 
-$('.side-menu-personal-setting h3:nth-child(3)').click(() => {
+$('.side-menu-personal-setting h3:nth-child(2)').click(() => {
     if (pageNow != "personal-setting-page") {
         $('.' + pageNow).transition('toggle')
         pageNow = 'personal-setting-page'
         $('.' + pageNow).transition('toggle')
     }
+    personal_setting_refresh()
     $('.side-menu-page').transition('slide right')
+})
+
+$('.side-menu-personal-setting h3:nth-child(3)').click(() => {
+    $.get('/api/user/logout', () => {
+        window.location = "/"
+    })
 })
 
 // 選擇群組
@@ -170,21 +189,124 @@ $('.group-notice-setting button').click(() => {
     })
 })
 
-// 新增行程
-$('.schedule-add button').click(() => {
-    $.post('/api/journey/set-journey', {
-        group_id: groupId,
-        date: $('.schedule-add input[name=schedule-data]').val(),
-        time: $('.schedule-add input[name=schedule-time]').val(),
-        place: $('.schedule-add input[name=schedule-place]').val(),
-        note: $('.schedule-add input[name=schedule-note]').val()
-    }, (data) => {
-        if (data) {
-            schedule_refresh()
-            $('.schedule-add').transition('slide up')
-            $('.schedule-group-bar i:nth-child(2)').toggleClass('edit outline check')
-        }
+$('.send-invitation-page i.close').click(() => {
+    $('.send-invitation-page').transition('slide up')
+})
+
+// 個人設定
+$('.personal-setting-page button:nth-child(5)').click(() => {
+    $('.personal-setting-page').transition('toggle')
+    $('.change-bank').transition('toggle')
+})
+
+$('.personal-setting-page button:nth-child(6)').click(() => {
+    $('.personal-setting-page').transition('toggle')
+    $('.change-password').transition('toggle')
+})
+
+$('.personal-setting-page button:nth-child(7)').click(() => {
+    $.post('/api/user/set-personal-info', {
+        delete_account: 'True'
+    }, () => {
+        window.location = "/"
     })
+})
+
+$('.personal-setting-page button:nth-child(8)').click(() => {
+    $.get('/api/user/logout', () => {
+        window.location = "/"
+    })
+})
+
+$('.change-bank-bar i.chevron').click(() => {
+    $('.change-bank').transition('toggle')
+    $('.personal-setting-page').transition('toggle')
+})
+
+$('.change-password-bar i.chevron').click(() => {
+    $('.change-password').transition('toggle')
+    $('.personal-setting-page').transition('toggle')
+})
+
+$('.change-bank button').click(() => {
+    $.post('/api/user/set-personal-info', {
+        bank_code: $('.change-bank-content input[name=bank-code]').val(),
+        account: $('.change-bank-content input[name=bank-account]').val()
+    }, () => {
+        $('.change-bank').transition('toggle')
+        $('.personal-setting-page').transition('toggle')
+        personal_setting_refresh()
+    })
+})
+
+$('.change-password button').click(() => {
+    if ($('.change-password-content input[name=old-pwd]').val() === '' || $('.change-password-content input[name=new-pwd]').val() === '' || $('.change-password-content input[name=new-pwd-again]').val() === '') {
+        $('.change-password-error-msg').html('請輸入所有所需資訊！')
+    } else if ($('.change-password-content input[name=new-pwd]').val() != $('.change-password-content input[name=new-pwd-again]').val()) {
+        $('.change-password-error-msg').html('再次輸入新密碼不相符！')
+    } else {
+        $.post('/api/user/set-personal-info', {
+            old_password: $('.change-password-content input[name=new-pwd]').val(),
+            password: $('.change-password-content input[name=old-pwd]').val()
+        }, () => {
+            $('.change-password').transition('toggle')
+            $('.personal-setting-page').transition('toggle')
+        })
+    }
+})
+
+$('.personal-setting-two-btn div:nth-child(1)').click(() => {
+    collect_mode = 'True'
+    $('.forum-main-bar h1').text('收藏貼文')
+    pageNow = 'forum-main-page'
+    forum_refresh(collect_mode)
+    $('.personal-setting-page').transition('toggle')
+    $('.forum-main-page').transition('toggle')
+})
+
+$('.personal-setting-two-btn div:nth-child(2)').click(() => {
+    $.get('/api/user/get-user-info', (data) => {
+        $('.edit-post-id p').text(data.name)
+    })
+    pageNow = 'forum-main-page'
+    $('.personal-setting-page').transition('toggle')
+    $('.edit-post-page').transition('toggle')
+})
+
+// 新增行程
+let journeyId
+$('.schedule-add button').click(() => {
+    if ($('.schedule-add-title h3').text() === '修改行程') {
+        $.post('/api/journey/set-journey', {
+            journey_id: journeyId,
+            group_id: groupId,
+            date: $('.schedule-add input[name=schedule-data]').val(),
+            time: $('.schedule-add input[name=schedule-time]').val(),
+            place: $('.schedule-add input[name=schedule-place]').val(),
+            note: $('.schedule-add input[name=schedule-note]').val()
+        }, (data) => {
+            if (data) {
+                schedule_refresh()
+                $('.schedule-add-title h3').text('新增行程')
+                $('.schedule-add').transition('slide up')
+                $('.schedule-group-bar i:nth-child(2)').toggleClass('edit outline check')
+            }
+        })
+    } else {
+        $.post('/api/journey/set-journey', {
+            group_id: groupId,
+            date: $('.schedule-add input[name=schedule-data]').val(),
+            time: $('.schedule-add input[name=schedule-time]').val(),
+            place: $('.schedule-add input[name=schedule-place]').val(),
+            note: $('.schedule-add input[name=schedule-note]').val()
+        }, (data) => {
+            if (data) {
+                schedule_refresh()
+                $('.schedule-add').transition('slide up')
+                $('.schedule-group-bar i:nth-child(2)').toggleClass('edit outline check')
+            }
+        })
+    }
 })
 
 $('.schedule-group-bar i:nth-child(2)').click(() => {
@@ -213,30 +335,37 @@ $('.edit-post-bar i.arrow.right').click(() => {
     if ($('.edit-post-main input[name=post-title]').val() === '' || $('.edit-post-main textarea[name=post-content]').val() === '') {
         /// error handler
     } else {
-        console.log($('.edit-post-main input[name=post-title]').val())
-        console.log($('.edit-post-main textarea[name=post-content]').val())
         $.post('/api/post/new-post', {
             title: $('.edit-post-main input[name=post-title]').val(),
             content: $('.edit-post-main textarea[name=post-content]').val()
         }, (data) => {
             if(data) {
                 $('.edit-post-page').transition('toggle')
-                forum_refresh()
+                collect_mode = 'False'
+                $('.forum-main-bar h1').text('論壇')
+                forum_refresh(collect_mode)
                 $('.forum-main-page').transition('toggle')
             }
         })
     }
 })
 
+$('.edit-post-bar i.close').click(() => {
+    $('.edit-post-page').transition('toggle')
+    collect_mode = 'False'
+    $('.forum-main-bar h1').text('論壇')
+    forum_refresh(collect_mode)
+    $('.forum-main-page').transition('toggle')
+})
+
 $('.read-post-bar i.chevron.left').click(() => {
     $('.read-post-page').transition('toggle')
-    forum_refresh()
+    forum_refresh(collect_mode)
     $('.forum-main-page').transition('toggle')
 })
 
 $('.read-post-like i.heart').click(() => {
     let temp
-    console.log(postId)
     if ($('.read-post-like i.heart').hasClass('outline')) {
         temp = 'True'
     } else {
@@ -249,6 +378,7 @@ $('.read-post-like i.heart').click(() => {
         if (data) {
             $('.read-post-like i.heart').toggleClass('outline')
             $('.read-post-response i.heart').toggleClass('outline')
+            each_post_refresh()
         }
     })
 })
@@ -267,6 +397,7 @@ $('.read-post-like i.bookmark').click(() => {
         if (data) {
             $('.read-post-like i.bookmark').toggleClass('outline')
             $('.read-post-response i.bookmark').toggleClass('outline')
+            each_post_refresh()
         }
     })
 })
@@ -318,12 +449,18 @@ function group_setting_refresh() {
         tempName.textContent = '邀請其他朋友'
         tempDiv.appendChild(tempPic)
         tempDiv.appendChild(tempName)
-        $('.group-record').append(tempDiv)
+        $('.group-add-setting').append(tempDiv)
         document.querySelector('.group-invite').addEventListener('click', function () {
             $('.send-invitation-page .invitation-group-name').text(data.group_name)
-            $('.send-invitation-page div:nth-child(2) h3:nth-child(2)').text(data.invite_code)
-            $('.send-invitation-page div:nth-child(2) h3:nth-child(4)').text(data.verify_code)
-            // 複製邀請資訊尚未實作
+            $('.send-invitation-page div:nth-child(5) h3:nth-child(2)').text(data.invite_code)
+            $('.send-invitation-page div:nth-child(5) h3:nth-child(4)').text(data.verify_code)
+            let invite_text = '邀請您加入 Team-Debit 的團隊分帳群組「' + data.group_name + '」，請前往 Team-Debit 登入系統後以群組代碼【' + data.invite_code + '】及驗證碼【' + data.verify_code + '】加入我們！'
+            const el = document.createElement('textarea')
+            el.value = invite_text
+            document.body.appendChild(el)
+            el.select()
+            document.execCommand('copy')
+            document.body.removeChild(el)
             $('.send-invitation-page').transition('slide up')
         })
     })
@@ -370,9 +507,6 @@ function schedule_refresh() {
                     tempDiv.appendChild(tempI3)
                     tempDiv.appendChild(tempDiv2)
                     tempDiv.appendChild(tempH33)
-                    console.log(i+j)
-                    console.log(document.querySelectorAll('.schedule-group-item i.ellipsis'))
-                    console.log(document.querySelectorAll('.schedule-group-btn'))
                     $('.schedule-group-content').append(tempDiv)
                     document.querySelectorAll('.schedule-group-item i.ellipsis')[i + j].addEventListener('click', () => {
                         if (document.querySelectorAll('.schedule-group-btn')[i + j].classList.contains('hidden')) {
@@ -382,7 +516,6 @@ function schedule_refresh() {
                         }
                     })
                     document.querySelectorAll('.schedule-group-btn i.trash')[i + j].addEventListener('click', () => {
-                        console.log(data[i].journey[j].journey_id)
                         $.post('/api/journey/set-journey', {
                             journey_id: data[i].journey[j].journey_id,
                             delete: 'True'
@@ -392,6 +525,15 @@ function schedule_refresh() {
                                 $('.schedule-group-bar i:nth-child(2)').toggleClass('edit outline check')
                             }
                         })
+                    })
+                    document.querySelectorAll('.schedule-group-btn i.edit')[i + j].addEventListener('click', () => {
+                        journeyId = data[i].journey[j].journey_id
+                        $('.schedule-add-title h3').text('修改行程')
+                        $('.schedule-add input[name=schedule-data]').val(data[i].date)
+                        $('.schedule-add input[name=schedule-time]').val(data[i].journey[j].time)
+                        $('.schedule-add input[name=schedule-place]').val(data[i].journey[j].place)
+                        $('.schedule-add input[name=schedule-note]').val(data[i].journey[j].note)
+                        $('.schedule-add').transition('slide up')
                     })
                 }
             }
@@ -406,12 +548,12 @@ function schedule_refresh() {
 }
 
 let postId
-function forum_refresh() {
+function forum_refresh(collect) {
     $.get('/api/post/get-post', {
-        amount: 20
+        collection: collect
     }, (data) => {
         $('.forum-main-posts').html('')
-        for (let i =0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
             let tempDiv = document.createElement('div')
             tempDiv.classList.add('forum-main-post')
             let tempP1 = document.createElement('p')
@@ -450,7 +592,6 @@ function forum_refresh() {
             tempDivD.appendChild(tempDiv3)
             tempDiv.appendChild(tempDivD)
             $('.forum-main-posts').append(tempDiv)
-            console.log(document.querySelectorAll('.forum-main-post'))
             document.querySelectorAll('.forum-main-post')[i].addEventListener('click', () => {
                 $('.read-post-bar h2').text(data[i].title)
                 $('.read-post-id p').text(data[i].owner)
@@ -481,10 +622,56 @@ function forum_refresh() {
     })
 }
 
+function each_post_refresh() {
+    $.get('/api/post/get-post', {
+        amount: 20
+    }, (data) => {
+        for (let i = 0; i < data.length; i++) {
+            if (postId === data[i].post_id) {
+                $('.read-post-bar h2').text(data[i].title)
+                $('.read-post-id p').text(data[i].owner)
+                $('.read-post-main h1').text(data[i].title)
+                $('.read-post-main textarea').val(data[i].content)
+                $('.read-post-main textarea').css('height', calcHeight($('.read-post-main textarea').val() + "px"))
+                postId = data[i].post_id
+                $('.read-post-message-bar div:nth-child(1) p').text(data[i].like_amount)
+                $('.read-post-message-bar div:nth-child(2) p').text(data[i].collection_amount)
+                $('.read-post-message-bar div:nth-child(3) p').text(data[i].comment_amount)
+                if(data[i].like && $('.read-post-like i.heart').hasClass('outline')) {
+                    $('.read-post-like i.heart').toggleClass('outline')
+                    $('.read-post-response i.heart').toggleClass('outline')
+                }
+                if(data[i].collect && $('.read-post-like i.bookmark').hasClass('outline')) {
+                    $('.read-post-like i.bookmark').toggleClass('outline')
+                    $('.read-post-response i.bookmark').toggleClass('outline')
+                }
+                let tempDiv = ''
+                for (let j = 0; j < data[i].comment.length; j++) {
+                    tempDiv += '<div class="read-post-comment"><div class="read-post-comment-id"><div></div><p>' + data[i].comment[j].user_name +'</p></div><div><p>' + data[i].comment[j].content + '</p></div></div>'
+                }
+                $('.read-post-comments').html(tempDiv)
+                break
+            }
+        }
+    })
+}
+
+function personal_setting_refresh() {
+    $.get('/api/user/get-user-info', (data) => {
+        $('.personal-setting-name').text(data.name)
+        $('.personal-setting-points h3:nth-child(2)').text(data.points)
+        $('.personal-setting-bank div p').text(data.account)
+        $('.change-bank-content input[name=bank-code]').val(data.bank_code)
+        $('.change-bank-content input[name=bank-account]').val(data.account)
+    })
+}
+
 function top_update() {
     group_setting_refresh()
     schedule_refresh()
-    forum_refresh()
+    forum_refresh(collect_mode)
+    each_post_refresh()
+    personal_setting_refresh()
 }
 
 function calcHeight(value) {

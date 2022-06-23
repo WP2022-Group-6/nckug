@@ -341,7 +341,7 @@ def remittance_finished():
 @app.route('/api/group/close', methods=['POST'])
 @login_required
 def close_group():
-    group_id = request.args.get('group_id', '')
+    group_id = request.values.get('group_id', '')
 
     try:
         group_id = int(group_id)
@@ -354,7 +354,7 @@ def close_group():
         abort(400)
 
     for user_group in (UserGroup.query.filter_by(_group_id=group.id).all() or []):
-        user = User.guery.get(user_group.user_id)
+        user = User.query.get(user_group.user_id)
         subject ='Team-Debit 群組結算通知'
         message = '{} 您好：<br><br>'.format(user.name) + \
                   'Team-Debit 群組【{}】已由管理員進行結算，<br>'.format(group.name) + \

@@ -1,11 +1,12 @@
 $(document).ready(() => {
-    var url = 'http://127.0.0.1'
-    var port = '5000'
-    var socket = io.connect(url + ':' + port)
+    var socket = io.connect(window.location.hostname)
     socket.on('update', function () {
-        console.log('update')
         top_update()
     })
+})
+
+$.get('/api/user/get-user-info').fail(() => {
+    window.location = "/login.html"
 })
 
 const barConfig = {
@@ -14,7 +15,7 @@ const barConfig = {
         labels: ['First day', 'Second day', 'Third day', 'Fourth day', 'Fifth day', 'sixth day', 'seventh day'],
         datasets: [{
             label: '# of money spent',
-            data: [1500, 2541, 398, 1412, 945, 102, 2103],
+            data: [0, 0, 0, 0, 0, 0, 0],
             backgroundColor: ['#EFA159', '#AE6D0C', '#EFA159', '#AE6D0C', '#EFA159', '#AE6D0C', '#EFA159']
         }]
     },
@@ -47,10 +48,10 @@ const barChart = new Chart(document.getElementById('barChart'), barConfig)
 const pieConfig = {
     type: 'pie',
     data: {
-        labels: ['住宿', '食物', '門票', '交通'],
+        labels: [],
         datasets: [{
             label: '# of money spent',
-            data: [1403, 548, 985, 200],
+            data: [],
             backgroundColor: ['#456228', '#798337', '#B5A24C', '#F6BF6A']
         }]
     },
@@ -257,7 +258,6 @@ function record_add_click_func(divName, number, transaction) {
                             for (let j = 0; j < splitDivider.length; j ++) {
                                 if (paidID === splitDivider[j].user_id) {
                                     document.querySelectorAll('.paid-select div')[j].style.border = '1.1vw solid #EFA159'
-                                    console.log(document.querySelectorAll('.paid-select div'))
                                 }
                             }
                         }
@@ -366,7 +366,6 @@ $('.main-buttom-banner .plus').click(() => {
             tempH3.textContent = data.member[i].nickname
             tempDiv.appendChild(tempPic)
             tempDiv.appendChild(tempH3)
-            console.log(tempDiv)
             $('.paid-record').append(tempDiv)
             $('.add-event-agreement').css('display', 'none')
             document.querySelectorAll('.paid-select')[i].addEventListener('click', () => {
@@ -375,7 +374,6 @@ $('.main-buttom-banner .plus').click(() => {
                         for (let j = 0; j < splitDivider.length; j ++) {
                             if (paidID === splitDivider[j].user_id) {
                                 document.querySelectorAll('.paid-select div')[j].style.border = '1.1vw solid #EFA159'
-                                console.log(document.querySelectorAll('.paid-select div'))
                             }
                         }
                     }
@@ -526,10 +524,6 @@ function EnterpersonalPage() {
 // 群組頁面btn
 $('.group-page button').click(() => {
     $('.close-account-page').transition('slide up')
-})
-
-// 結算畫面btn
-$('.close-account-page i.chevron.left').click(() => {
     $.get('./api/group/get-group-info', {
         group_id: groupId
     }, (data) => {
@@ -542,13 +536,28 @@ $('.close-account-page i.chevron.left').click(() => {
             }
         }
     })
+})
+
+// 結算畫面btn
+$('.close-account-page i.chevron.left').click(() => {
     $('.close-account-page').transition('slide up')
 })
 
 $('.close-review-page .close-account-btn').click(() => {
-    $('.close-review-page').transition('toggle')
-    $('.close-done-page').transition('toggle')
-    $('.close-account-page i.chevron.left').transition('toggle')
+    console.log(groupId)
+    $.post('/api/group/close', {
+        group_id: groupId
+    }, (data) => {
+        if (data) {
+            $('.close-review-page').transition('toggle')
+            $('.close-done-page').transition('toggle')
+            $('.close-account-page i.chevron.left').transition('toggle')
+        }
+    })
+})
+
+$('.close-done-page button').click(() => {
+    window.location = "/login.html?select=True"
 })
 
 let visibleNow = -1
@@ -560,11 +569,9 @@ $('.close-review-page button').click(() => {
     }, (data) => {
         for (let i = 0; i < data.length; i++) {
             for (let j = 0; j < data[i].transactions.length; j++) {
-                console.log(data[i].transactions[j].transaction_id)
                 transactionID.push(data[i].transactions[j].transaction_id)
             }
         }
-        console.log(transactionID)
         $('.close-transaction-content').html('')
         for (let i = 0; i < document.querySelectorAll('.close-transaction-title').length; i++) {
             document.querySelectorAll('.close-transaction-title')[i].removeEventListener('click', () => {
@@ -677,7 +684,7 @@ $('.send-invitation-page button').click(() => {
 
 // 新增帳目頁面btn
 $('.add-event-page .close').click(() => {
-    if ($('.split-account').hasClass('hidden') && $('.paid-account').hasClass('hidden')) {
+    if ($('.split-account').hasClass('hidden') && $('.paid-account').hasClass('hidden') && $('.denial-reason-page').hasClass('hidden')) {
         $('.add-event-page').transition('fade')
         if (splitStatus || splitMode === 'watch') {
             splitStatus = false
@@ -710,9 +717,11 @@ $('.add-event-page .close').click(() => {
     } else if (!$('.paid-account').hasClass('hidden')) {
         $('.paid-account-error-msg').html('')
         $('.paid-account').transition('fade')
-    } else {
+    } else if (!$('.split-account').hasClass('hidden')){
         $('.split-account-error-msg').html('')
         $('.split-account').transition('fade')
+    } else {
+        $('.denial-reason-page').transition('toggle')
     }
 })
 
@@ -725,7 +734,7 @@ $('.add-event-content .paid-people-btn').click(() => {
 })
 
 $('.split-account button').click(() => {
-    if (splitMode === 'add') {
+    if (splitMode === 'add' || $('.add-event-content .add-event-save').text() === '儲存更改') {
         $.get('./api/group/get-group-info', {
             group_id: groupId
         }, (data) => {
@@ -812,8 +821,26 @@ $('.add-event-content .add-event-save').click(() => {
         $('.add-event-content .add-event-save').text('儲存更改')
         $('.split-account-navbar').css('display', 'flex')
         $('.add-event-comment').css('display', 'none')
+        for (let i = 0; i < document.querySelectorAll('.split-record input').length; i++) {
+            document.querySelectorAll('.split-record input')[i].removeAttribute('readonly')
+        }
     } else {
         add_and_change_event('change')
+    }
+})
+
+$('.split-content-depiction i').click(() => {
+    if (splitMode === 'add' || $('.add-event-content .add-event-save').text() === '儲存更改') {
+            var total = $('.add-event-money input[name=event-money]').val()
+        var length = document.querySelectorAll('.split-record input').length
+        var each_person = Math.floor(total / length)
+        for (let i = 0; i < document.querySelectorAll('.split-record input').length; i++) {
+            if (i === 0) {
+                document.querySelectorAll('.split-record input')[0].value = (each_person + (total - (each_person * length)))
+            } else {
+                document.querySelectorAll('.split-record input')[i].value = (each_person)
+            }
+        }
     }
 })
 
@@ -882,6 +909,15 @@ $('.add-event-agreement button:nth-child(1)').click(() => {
         if (!data) {
             $('.add-event-content-error-msg').html('系統錯誤請稍後再試！')
         } else {
+            $.get('/api/transaction/get-info', {
+                transaction_id: transactionId,
+                amount: 0
+            }, (data) => {
+                if (data.state) {
+                    $('.add-event-content .add-event-save').css('display', 'none')
+                    $('.add-event-agreement').css('display', 'none')
+                }
+            })
             $('.add-event-content-error-msg').html('')
             $('.add-event-agreement button:nth-child(1)').css('display', 'none')
         }
@@ -1011,6 +1047,14 @@ function group_page_refresh() {
         } else {
             $('.group-page button').css('display', 'none')
         }
+        $('.close-account-page p:nth-child(5)').text(data.group_name)
+        $('.close-review-page button p:nth-child(2)').text(data.balance)
+        for (let i = 0; i < data.member.length; i++) {
+            if (data.member[i].user_id === userId) {
+                $('.close-account-page p:nth-child(6)').text(data.member[i].nickname)
+                break
+            }
+        }
     })
 }
 
@@ -1036,7 +1080,7 @@ function top_update() {
 }
 
 $('.side-menu-choose-group h3').click(() => {
-    window.location = "./forum.html?page=group-chosing-page" + "&group-id=" + groupId
+    window.location = "/login.html?select=True"
 })
 
 $('.side-menu-group-setting h3').click(() => {
@@ -1048,9 +1092,15 @@ $('.side-menu-schedule h3:nth-child(2)').click(() => {
 })
 
 $('.side-menu-schedule h3:nth-child(3)').click(() => {
-    window.location = "./forum.html?page=forum-main-page" + "&group-id=" + groupId
+    window.location = "./forum.html?page=forum-main-page"
+})
+
+$('.side-menu-personal-setting h3:nth-child(2)').click(() => {
+    window.location = "./forum.html?page=personal-setting-page" + "&group-id=" + groupId
 })
 
 $('.side-menu-personal-setting h3:nth-child(3)').click(() => {
-    window.location = "./forum.html?page=personal-setting-page" + "&group-id=" + groupId
+    $.get('/api/user/logout', () => {
+        window.location = "/"
+    })
 })

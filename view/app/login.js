@@ -1,10 +1,69 @@
 let classArr = ['img1', 'img2', 'img3', 'img-none', 'img-none']
 let groupNames = []
 $(document).ready(() => {
-    var url = 'http://127.0.0.1'
-    var port = '5000'
-    var socket = io.connect(url + ':' + port)
+    var socket = io.connect(window.location.hostname)
 })
+
+const urlParams = new URLSearchParams(window.location.search)
+let select = urlParams.get('select')
+if (select === "True") {
+    $.get('./api/user/get-user-info', (data) => {
+        let temp = ''
+        groupNames = []
+        classArr = []
+        for (let i = 0; i < data.group.length; i++) {
+            if (i < 3) {
+                if (data.group[i].picture === '') {
+                    temp += '<li class="img' + (i + 1) + '"></li>'
+                }
+                else {
+                    temp += '<li class="img' + (i + 1) + '"><img src="' + data.group[i].picture + '"></li>'
+                }
+                classArr.push('img' + (i + 1))
+            }
+            else {
+                if (data.group[i].picture === '') {
+                    temp += '<li class="img-none"><img src="' + data.group[i].picture + '"></li>'
+                } else {
+                    temp += '<li class="img-none"></li>'
+                }
+                classArr.push('img-none')
+            }
+            let group = {'group_name': data.group[i].group_name, 'group_id': data.group[i].group_id}
+            groupNames.push(group)
+        }
+        // 新增討論區選項
+        if (groupNames.length < 3) {
+            temp += '<li class="img' + (groupNames.length + 1) + '"></li>'
+            classArr.push('img' + (groupNames.length + 1))
+        } else {
+            temp += '<li class="img-none"></li>'
+            classArr.push('img-none')
+        }
+        groupNames.push({'group_name': '討論區', 'group_id': 0})
+        // 處理不足3個
+        if (groupNames.length === 1) {
+            temp += '<li class="img2"></li><li class="img3"></li>'
+            classArr.push('img2')
+            classArr.push('img3')
+            /////////////////////////////////////改道這!!!
+            groupNames.push({'group_name': '討論區', 'group_id': 0})
+            groupNames.push({'group_name': '討論區', 'group_id': 0})
+        } else if (groupNames.length === 2) {
+            temp += '<li class="img3"></li><li class="img-none"></li>'
+            classArr.push('img3')
+            classArr.push('img-none')
+            groupNames.push(groupNames[0])
+            groupNames.push({'group_name': '討論區', 'group_id': 0})
+        }
+        $('.choose-group-page ul.imgbox').html(temp)
+        $('.choose-group-page .choose-group-name').text(groupNames[1].group_name)
+        if($('.choose-group-page .choose-group-name').text() === '討論區') {
+            $('.choose-group-page .choose-group-enter').text('進入討論區')
+        }
+    })
+    $('.choose-group-page').transition('slide up')
+}
 
 // 初始頁面btn
 $('.entrance-btn button:nth-child(1)').click((event) => {
@@ -49,7 +108,6 @@ $('.login-page button').click((event) => {
                     groupNames = []
                     classArr = []
                     for (let i = 0; i < data.group.length; i++) {
-                        console.log(data.group[i].group_name)
                         if (i < 3) {
                             if (data.group[i].picture === '') {
                                 temp += '<li class="img' + (i + 1) + '"></li>'
@@ -196,13 +254,15 @@ $('.verification-page button').click((event) => {
             verify_code:$('.verification-page input[name=verification-code]').val()
         }, (data) => {
             if (data) {
+
+                $('.verification-page').transition('slide up')
                 let temp = '<li class="img1"></li><li class="img2"></li><li class="img3"></li>'
                 groupNames = [{'group_name': '討論區', 'group_id': 0}, {'group_name': '討論區', 'group_id': 0}, {'group_name': '討論區', 'group_id': 0}]
                 classArr = ['img1', 'img2', 'img3']
                 $('.choose-group-page ul.imgbox').html(temp)
                 $('.choose-group-page .choose-group-name').text(groupNames[1].group_name)
                 $('.choose-group-page .choose-group-enter').text('進入討論區')
-                $('.choose-group-page').transition('slide up')
+                // $('.choose-group-page').transition('slide up')
             }else {
                 $('.verification-error-msg').html('驗證碼錯誤')
             }
@@ -214,7 +274,7 @@ $('.verification-page button').click((event) => {
 $('.choose-group-enter').click(() => {
     if (groupNames[1].group_id === 0) {
         ///////////不確定
-        window.location = "./forum.html"
+        window.location = "./forum.html?page=forum-main-page"
     } else {
         window.location = "./main.html?group-id=" + groupNames[1].group_id
     }

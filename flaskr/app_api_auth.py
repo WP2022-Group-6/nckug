@@ -1,5 +1,5 @@
-from flask import abort, jsonify, request
-from flask_login import login_user
+from flask import abort, jsonify, redirect, request
+from flask_login import login_user, login_required, logout_user
 
 from flaskr.models import User, UsersWithoutVerify
 from flaskr import app
@@ -48,8 +48,8 @@ def signup():
                   '點選「註冊」、「輸入驗證碼」填入上方提供的驗證碼，<br>' + \
                   '即可完成註冊囉！<br><br>' + \
                   '註：<br>' + \
-                  '若您未曾註冊本系統<br>' + \
-                  '敬請直接忽略本郵件，謝謝<br><br>' + \
+                  '若您未曾註冊本系統，<br>' + \
+                  '敬請直接忽略本郵件，謝謝！<br><br>' + \
                   'Team-Debit 開發團隊 敬上'
         send_email(subject, message, email)
         data = True
@@ -93,3 +93,10 @@ def verify_signup():
         data = True
 
     return jsonify(data)
+
+
+@app.route('/api/user/logout', methods=['GET'])
+@login_required
+def logout():
+    logout_user()
+    return redirect('/')

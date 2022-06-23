@@ -31,7 +31,7 @@ html
       h3 每日花費
       .home-today-cost
         p 今日
-        p 1392
+        p 0
         p NTD
       .home-barchart-div
         canvas#barChart
@@ -39,11 +39,11 @@ html
       section.home-bottom-part
         h3 近期紀錄
         .home-record
-          each val in [1, 2, 3, 4]
-            div
-              h3 名稱
-              h3 金額
-              i.big.check.circle.outline.icon
+          //- each val in [1, 2, 3, 4]
+          //-   div
+          //-     h3 名稱
+          //-     h3 金額
+          //-     i.big.check.circle.outline.icon
       // 圖表頁面下半部分
       section.chart-bottom-part.transition.hidden
         h3 花費類型
@@ -175,10 +175,10 @@ html
       section.add-event-content
         h2 類型
         select(name='event-kind')
-          option(value='food') 食物
-          option(value='shopping') 購物
-          option(value='ent') 娛樂
-          option(value='other') 其他
+          option(value='Food') 食物
+          option(value='Shopping') 購物
+          option(value='Entertainment') 娛樂
+          option(value='Other') 其他
         h2 支出項目
         input(type="text" name='event-name')
         h2 備註

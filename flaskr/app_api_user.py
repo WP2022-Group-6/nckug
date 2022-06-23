@@ -28,6 +28,7 @@ def get_user_info():
 @app.route('/api/user/set-personal-info', methods=['POST'])
 @login_required
 def set_personal_info():
+    old_password = request.values.get('old_password', '')
     password = request.values.get('password', '')
     bank_code = request.values.get('bank_code', '')
     account = request.values.get('account', '')
@@ -39,7 +40,7 @@ def set_personal_info():
         current_user.remove()
         data = True
     else:
-        if not isempty(password):
+        if not isempty(password) and not isempty(old_password) and current_user.check_password(old_password):
             current_user.set_password(password)
             data = True
         if not isempty(bank_code) and not isempty(account):

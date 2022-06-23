@@ -18,20 +18,20 @@ html
         h1 個人帳戶設定
       .personal-setting-pic
         i.huge.user.circle.outline.icon
-      p 帳號
+      p.personal-setting-name 帳號
       .personal-setting-multi-btn
         .personal-setting-two-btn
           div
-            h3 收藏行程
+            h3 收藏貼文
             i.huge.bookmark.icon
           div
-            h3 發表行程
+            h3 發表貼文
             i.huge.edit.outline.icon
         .personal-setting-two-btn
-          div
+          .personal-setting-points
             h3 累積點數
             h3 XXXX
-          div
+          .personal-setting-bank
             h3 銀行帳戶
             div
               div
@@ -48,10 +48,10 @@ html
       .change-bank-content
         div
           h2 銀行代碼
-          input(type="number" placeholder="銀行代碼")
+          input(type="number" placeholder="銀行代碼" name="bank-code")
         div
           h2 帳號
-          input(type="number" placeholder="帳號")
+          input(type="number" placeholder="帳號" name="bank-account")
         button 儲存
 
     section.change-password.transition.hidden
@@ -61,13 +61,14 @@ html
       .change-password-content
         div
           h2 舊密碼
-          input(type="number" placeholder="舊密碼")
+          input(type="number" placeholder="舊密碼" name="old-pwd")
         div
           h2 新密碼
-          input(type="number" placeholder="新密碼")
+          input(type="number" placeholder="新密碼" name="new-pwd")
         div
           h2 再次輸入新密碼
-          input(type="number" placeholder="新密碼")
+          input(type="number" placeholder="新密碼" name="new-pwd-again")
+        .change-password-error-msg
         button 確定
 
     section.group-chosing-page.transition.hidden
@@ -145,21 +146,21 @@ html
           div
           h1 想去哪裡玩?
         .forum-main-posts
-          each val in [1, 2, 3, 4, 5, 6, 7]
-            .forum-main-post
-              p user name
-              h3 title
-              p 123456789123456789123456789123456789123456789
-              div
-                div
-                  i.heart.icon
-                  p 123
-                div
-                  i.bookmark.icon
-                  p 123
-                div
-                  i.comment.icon
-                  p 123
+          //- each val in [1, 2, 3, 4, 5, 6, 7]
+          //-   .forum-main-post
+          //-     p user name
+          //-     h3 title
+          //-     p 123456789123456789123456789123456789123456789
+          //-     div
+          //-       div
+          //-         i.heart.icon
+          //-         p 123
+          //-       div
+          //-         i.bookmark.icon
+          //-         p 123
+          //-       div
+          //-         i.comment.icon
+          //-         p 123
       .forum-main-fixed-i
         i.big.chevron.up.icon
         i.big.edit.outline.icon

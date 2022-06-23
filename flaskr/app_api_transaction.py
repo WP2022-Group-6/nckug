@@ -94,8 +94,8 @@ def set_transaction():
                                    personal_expenses=person['value'], input_value=person['value'], agree=False)
             most_expense_user = {
                 'user': person['user_id'],
-                'cost': personal_expenses
-            } if personal_expenses > most_expense_user['cost'] else most_expense_user
+                'cost': person['value']
+            } if person['value'] > most_expense_user['cost'] else most_expense_user
             member_expense_sum += person['value']
     elif split_method == 'number_of':
         total = sum([person['value'] for person in divider])
@@ -207,11 +207,7 @@ def get_group_transaction():
 
         for transaction in (Transaction.query.filter_by(_group_id=group_id).order_by(Transaction._datetime.desc()).all() or []):
             transaction_info = {'transaction_id': transaction._id,
-                                'title': transaction.description, 'total_money': transaction.amount, 'state': True}
-            for response in (UserTransaction.query.filter_by(_transaction_id=transaction._id).all() or []):
-                if response.personal_expenses > 0 and not response.agree:
-                    transaction_info['state'] = False
-                    break
+                                'title': transaction.description, 'total_money': transaction.amount, 'state': transaction.closed}
             if transaction.datetime.date() not in temp:
                 temp[transaction.datetime.date()] = [transaction_info]
             else:
@@ -287,7 +283,7 @@ def new_transaction_message():
         user_transaction.agree = True
         data = True
     elif message.get('type') == 'disagree':
-        user_transaction.agree = False
+        user_transaction.agree = False if not transaction.closed else user_transaction.agree
         TransactionMessage.create(transaction_id=transaction_id, user_id=current_user.id,
                                   messages=message.get('content'))
         data = True
@@ -319,7 +315,8 @@ def get_transaction_type():
     data = dict()
 
     for transaction in (Transaction.query.filter_by(_group_id=group_id).all() or []):
-        data[transaction.type] = data[transaction.type] + \
-            transaction.amount if transaction.type in data else transaction.amount
+        if transaction.closed:
+            data[transaction.type] = data[transaction.type] + \
+                transaction.amount if transaction.type in data else transaction.amount
 
     return jsonify(data)

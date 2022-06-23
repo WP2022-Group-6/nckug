@@ -84,11 +84,11 @@ class User(db.Model, UserMixin):
         DatabaseManager.update()
 
     def set_password(self, password: str):
-        self._password_hash = password
+        self._password_hash = generate_password_hash(password)
         DatabaseManager.update()
 
     def check_password(self, password) -> bool:
-        return self._password_hash == password
+        return check_password_hash(self._password_hash, password)
 
     @property
     def email(self) -> str:
@@ -160,7 +160,7 @@ class User(db.Model, UserMixin):
             user = cls(name=name, password_hash=password_hash, email=email,
                        bank_code=bank_code, account=account, points=points)
         elif password:
-            password_hash = password
+            password_hash = generate_password_hash(password)
             user = cls(name=name, password_hash=password_hash, email=email,
                        bank_code=bank_code, account=account, points=points)
         else:
@@ -252,7 +252,7 @@ class UsersWithoutVerify(db.Model):
             raise ValueError('This email already exists in the UsersWithoutVerify table.')
         if cls.query.filter(func.lower(User._email) == func.lower(email)).first() is not None:
             raise ValueError('This email already exists in the User table.')
-        password_hash = password
+        password_hash = generate_password_hash(password)
         verification = gen_random_text(length=6, digit=True, letter=True)
         user_without_verify = cls(email, username, password_hash, verification, datetime.now())
         DatabaseManager.create(user_without_verify)
@@ -656,7 +656,7 @@ class Transaction(db.Model):
         transaction_member = {item.user_id: item for item in (
             UserTransaction.query.filter_by(_transaction_id=self.id).all() or [])}
         for item in transaction_member.values():
-            if item.personal_expenses > 0 and not item.agree:
+            if item.personal_expenses > 0 and item.agree == False:
                 return
         for user_group in (UserGroup.query.filter_by(_group_id=self.group_id) or []):
             user_group.personal_balance -= transaction_member[user_group.user_id].personal_expenses
